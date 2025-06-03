@@ -9,7 +9,8 @@ export default function Main() {
         if (!isLoggedIn) {
             router.replace('/');
         }
-    }, []);    const handleLogout = () => {
+    }, []);    
+    const handleLogout = () => {
         sessionStorage.removeItem('isLoggedIn');
         router.replace('/');
     };    return (
