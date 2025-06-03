@@ -15,7 +15,7 @@ export default function Main() {
     };    return (
         <div className="main-container">
             <div className="main-header">
-                <h1 className="main-title">Welcome to Dashboard</h1>
+                <h1 className="main-title">Welcome to Main page</h1>
                 <button 
                     onClick={handleLogout}
                     className="logout-button"
@@ -25,7 +25,7 @@ export default function Main() {
             </div>
             <div className="content-card">
                 <p className="welcome-text">
-                    Welcome to your dashboard. This is a protected page that can only be accessed after login.
+                    Main page.
                 </p>
             </div>
         </div>
