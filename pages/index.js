@@ -7,14 +7,14 @@ export default function Login() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const username = e.target.username.value;
+        const email = e.target.email.value;        // Changed from username to email
         const password = e.target.password.value;
 
         try {
             const res = await fetch('http://localhost:3001/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ email, password })  // Changed from username to email
             });
 
             const data = await res.json();
@@ -27,15 +27,17 @@ export default function Login() {
         } catch (err) {
             setError('Error connecting to server');
         }
-    };    return (
+    };
+
+    return (
         <div className="login-container">
             <div className="login-card">
                 <h1 className="login-title">test</h1>
                 <form onSubmit={handleSubmit} className="login-form">
                     <input 
-                        type="text" 
-                        name="username" 
-                        placeholder="Username" 
+                        type="email"               // Changed from text to email
+                        name="email"               // Changed from username to email
+                        placeholder="Email"        // Updated placeholder
                         required 
                         className="input-field"
                     />

@@ -2,10 +2,10 @@ const User = require('../models/User');
 
 exports.login = async (req, res) => {
     try {
-        const name = req.body.name || req.body.username;
+        const email = req.body.email || req.body.username;
         const { password } = req.body;
         
-        const user = await User.findOne({ name });
+        const user = await User.findOne({ email });
         
         if (!user || user.password !== password) {
             return res.status(401).json({ 
@@ -34,10 +34,10 @@ exports.login = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const userName = req.body.name || req.body.username;
+        const userName = req.body.email || req.body.username;
         
         const newUser = new User({
-            name: userName,
+            email: userName,
             password: req.body.password
         });
         
@@ -106,7 +106,7 @@ exports.getUserById = async (req, res) => {
 exports.updateUser = async (req, res) => {
     try {
         const updateData = {
-            name: req.body.name,
+            email: req.body.email,
             password: req.body.password,
             updatedAt: new Date()
         };
@@ -129,7 +129,7 @@ exports.updateUser = async (req, res) => {
             message: 'User updated successfully',
             user: {
                 id: user._id,
-                name: user.name,
+                email: user.email,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt
             }
