@@ -1,11 +1,11 @@
 {
   "name": "dadlaga",
-  "version": "1.0.0",
-  "scripts": {
+  "version": "1.0.0",  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "server": "node server.js"
+    "server": "node server.js",
+    "mongoose-server": "node my-mongoose-app/src/app.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

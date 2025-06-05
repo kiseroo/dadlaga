@@ -4,7 +4,10 @@ const uri = "mongodb+srv://test:test123@cluster0.agtvxla.mongodb.net/test?retryW
 
 const connectToMongoDB = async () => {
     try {
-        await mongoose.connect(uri);
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+            socketTimeoutMS: 45000,         // Close sockets after 45 seconds of inactivity
+        });
         console.log("Connected to MongoDB with Mongoose");
         return true;
     } catch (error) {
