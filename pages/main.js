@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the Map component with no SSR to avoid window is not defined errors
+const Map = dynamic(() => import('../components/Map'), {
+  ssr: false
+});
 
 export default function Main() {
     const router = useRouter();
@@ -139,20 +145,24 @@ export default function Main() {
             setError('Error connecting to server');
             console.error(err);
         }
-    };
-
-    const renderDashboard = () => {
+    };    const renderDashboard = () => {
         return (
-            <div className="content-card">
-                <h2>Welcome to the Dashboard</h2>
-                {currentUser && (
-                    <div>
-                        <p>Logged in as: {currentUser.email}</p>
-                    </div>
-                )}
-                <p>
-                    test.
-                </p>
+            <div>
+                <div className="content-card">
+                    <h2>Welcome to the Dashboard</h2>
+                    {currentUser && (
+                        <div>
+                            <p>Logged in as: {currentUser.email}</p>
+                        </div>
+                    )}
+                    <p>
+                        This is a simple dashboard to manage users. Use the tabs above to navigate.
+                    </p>
+                </div>
+                  <div className="content-card">
+                    <h2>Location Map</h2>
+                    <Map />
+                </div>
             </div>
         );
     };

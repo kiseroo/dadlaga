@@ -12,7 +12,6 @@ export default function Register() {
         const password = e.target.password.value;
         const confirmPassword = e.target.confirmPassword.value;
 
-        // Basic validation
         if (password !== confirmPassword) {
             setError('Passwords do not match');
             return;
@@ -28,7 +27,6 @@ export default function Register() {
                 setSuccess('Registration successful! Redirecting to login...');
                 setError('');
                 
-                // Redirect to login after a delay
                 setTimeout(() => {
                     router.push('/');
                 }, 2000);

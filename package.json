@@ -1,6 +1,7 @@
 {
   "name": "dadlaga",
-  "version": "1.0.0",  "scripts": {
+  "version": "1.0.0",
+  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -8,6 +9,7 @@
     "mongoose-server": "node my-mongoose-app/src/app.js"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.6",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "mongodb": "^6.16.0",
