@@ -3,7 +3,6 @@ const router = express.Router();
 const userController = require('../controllers/userController');
 const { Types } = require('mongoose');
 
-// Middleware to validate MongoDB ObjectId
 const validateObjectId = (req, res, next) => {
     if (!Types.ObjectId.isValid(req.params.id)) {
         return res.status(400).json({

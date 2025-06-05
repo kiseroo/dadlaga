@@ -2,21 +2,19 @@ const express = require('express');
 const cors = require('cors');
 const connectToMongoDB = require('./config/database');
 const userRoutes = require('./routes/users');
+const sambarRoutes = require('./routes/sambar');
 const mongoose = require('mongoose');
 
 const app = express();
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
 app.use('/api', userRoutes);
+app.use('/api', sambarRoutes);
 
-// Database Connection
 connectToMongoDB().catch(console.error);
 
-// Graceful Shutdown
 process.on('SIGINT', async () => {
     await mongoose.connection.close();
     console.log('MongoDB connection closed');
