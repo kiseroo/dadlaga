@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Хан-Уул дүүрэг 25 хороо.kmz</name>
+	<open>1</open>
+	<gx:CascadingStyle kml:id="__managed_style_276D7D5F4A33D3336B7A">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1FB7A3050E33D3336B7A">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0225266D3933D3336B7A">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1FB7A3050E33D3336B7A</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_276D7D5F4A33D3336B7A</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="036583EB1B33D2FC9182">
+		<name>LM horoo21</name>
+		<open>1</open>
+		<Placemark id="1F91D0340D33D2FC91A9">
+			<name>4</name>
+			<styleUrl>#__managed_style_0225266D3933D3336B7A</styleUrl>
+			<Polygon>
+				<tessellate>1</tessellate>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							106.8482402194016,47.87629658654269,0 106.8448677735925,47.87884860715447,0 106.839579756641,47.88744758530251,0 106.8367940271208,47.88708368805051,0 106.8232406317924,47.88448579138,0 106.8228602180415,47.87615486840842,0 106.8235576913457,47.87082101037857,0 106.824993570403,47.86947886775911,0 106.8482402194016,47.87629658654269,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

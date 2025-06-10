@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Хан-Уул дүүрэг 25 хороо.kmz</name>
+	<open>1</open>
+	<gx:CascadingStyle kml:id="__managed_style_2CF6696AE433D3284D7A">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_18BCA299B233D3284D7A">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_081310D66133D3284D7A">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_18BCA299B233D3284D7A</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2CF6696AE433D3284D7A</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="036583EB1B33D2FC9182">
+		<name>LM horoo21</name>
+		<open>1</open>
+		<Placemark id="ID_00004">
+			<name>16-?????</name>
+			<Snippet maxLines="0"></Snippet>
+			<description><![CDATA[<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<head>
+
+<META http-equiv="Content-Type" content="text/html">
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+</head>
+
+<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-collapse:collapse;padding:3px 3px 3px 3px">
+
+<tr style="text-align:center;font-weight:bold;background:#9CBCE2">
+
+<td>16-?????</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-spacing:0px; padding:3px 3px 3px 3px">
+
+<tr>
+
+<td>FID</td>
+
+<td>4</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>code</td>
+
+<td>0112281</td>
+
+</tr>
+
+<tr>
+
+<td>name</td>
+
+<td>16-?????</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>area_m2</td>
+
+<td>2336994.86773</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>]]></description>
+			<styleUrl>#__managed_style_081310D66133D3284D7A</styleUrl>
+			<MultiGeometry>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								106.7867563821048,47.8665109456918,0 106.7865591803619,47.86680441229384,0 106.7859558827577,47.86771055929495,0 106.785505451915,47.86849163488108,0 106.7851776040631,47.86917166354147,0 106.7848648522311,47.86989293331225,0 106.7848264718641,47.87002271987267,0 106.7742259821433,47.86883511295014,0 106.7733035340308,47.86605056458194,0 106.7721153884144,47.86596358305296,0 106.7692504802254,47.86588740058313,0 106.7634561833561,47.86581104634274,0 106.762812709439,47.86299203325581,0 106.7621587862989,47.86119234684941,0 106.7621978159764,47.8611918414304,0 106.7619344486159,47.86031121269236,0 106.7618483376306,47.85975680403334,0 106.7618701165126,47.8592240402573,0 106.7620877630356,47.85778691419186,0 106.7636572845037,47.85788712707601,0 106.7654466651063,47.85801087397339,0 106.766439016413,47.85797865382825,0 106.7678547100707,47.85811548342657,0 106.7714159202278,47.85867071599643,0 106.7738587734769,47.85907656672433,0 106.7760801307724,47.85949486781978,0 106.778227339284,47.85973791954565,0 106.780699728004,47.86022611220819,0 106.7821329416866,47.86042703779117,0 106.7819635092022,47.86084728456366,0 106.7815811976616,47.86140155110254,0 106.7809385481838,47.8614644584737,0 106.7816369132112,47.86433399541045,0 106.7818195280351,47.86448790638873,0 106.785360398012,47.8655887869709,0 106.7851387903924,47.86585576456791,0 106.7867563821048,47.8665109456918,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+			</MultiGeometry>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

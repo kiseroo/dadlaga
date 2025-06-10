@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Хан-Уул дүүрэг 25 хороо.kmz</name>
+	<open>1</open>
+	<gx:CascadingStyle kml:id="__managed_style_208D61085033D329EF88">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_177801A71C33D329EF88">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ffd27619</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0ED639223233D329EF88">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_177801A71C33D329EF88</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_208D61085033D329EF88</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="036583EB1B33D2FC9182">
+		<name>LM horoo21</name>
+		<open>1</open>
+		<Placemark id="2E7BC7732E33D2FC91A6">
+			<name>24</name>
+			<styleUrl>#__managed_style_0ED639223233D329EF88</styleUrl>
+			<Polygon>
+				<tessellate>1</tessellate>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							106.8450859477844,47.87877750055526,0 106.8470863713054,47.87727157830822,0 106.8486752397419,47.87609310922487,0 106.8551011755489,47.86949289058405,0 106.8720192708308,47.84744843851011,0 106.8888703615529,47.84025094631722,0 106.8854323811924,47.85813140987259,0 106.8841590462256,47.86508133431264,0 106.8768717518924,47.87034505131075,0 106.8723635116668,47.88041249210741,0 106.8645348694788,47.88574421324299,0 106.8638911925171,47.88610552178325,0 106.8638417300156,47.88848944228516,0 106.8596543462452,47.88851799871304,0 106.8478297298422,47.88821092059706,0 106.8398273919194,47.88740112245354,0 106.8450859477844,47.87877750055526,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

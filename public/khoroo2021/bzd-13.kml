@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>bzd-13.kml</name>
+	<Schema name="bzd_zassan" id="S_bzd_zassan_SDDSI0">
+		<SimpleField type="long" name="OBJECTID"><displayName>&lt;b&gt;OBJECTID&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="name"><displayName>&lt;b&gt;name&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="double" name="Shape_Leng"><displayName>&lt;b&gt;Shape_Leng&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="double" name="Shape_Area"><displayName>&lt;b&gt;Shape_Area&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="duureg"><displayName>&lt;b&gt;duureg&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="int" name="ga"><displayName>&lt;b&gt;ga&lt;/b&gt;</displayName>
+</SimpleField>
+	</Schema>
+	<StyleMap id="falseColor112">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#falseColor46</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#falseColor114</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="falseColor114">
+		<IconStyle>
+			<color>ffe7ebef</color>
+		</IconStyle>
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>OBJECTID</b></td><td>$[bzd_zassan/OBJECTID]</td></tr>
+  <tr><td><b>name</b></td><td>$[bzd_zassan/name]</td></tr>
+  <tr><td><b>Shape_Leng</b></td><td>$[bzd_zassan/Shape_Leng]</td></tr>
+  <tr><td><b>Shape_Area</b></td><td>$[bzd_zassan/Shape_Area]</td></tr>
+  <tr><td><b>duureg</b></td><td>$[bzd_zassan/duureg]</td></tr>
+  <tr><td><b>ga</b></td><td>$[bzd_zassan/ga]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<LineStyle>
+			<color>ffff0000</color>
+			<width>3</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>4dffaa00</color>
+		</PolyStyle>
+	</Style>
+	<Style id="falseColor46">
+		<IconStyle>
+			<color>ffe7ebef</color>
+		</IconStyle>
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>OBJECTID</b></td><td>$[bzd_zassan/OBJECTID]</td></tr>
+  <tr><td><b>name</b></td><td>$[bzd_zassan/name]</td></tr>
+  <tr><td><b>Shape_Leng</b></td><td>$[bzd_zassan/Shape_Leng]</td></tr>
+  <tr><td><b>Shape_Area</b></td><td>$[bzd_zassan/Shape_Area]</td></tr>
+  <tr><td><b>duureg</b></td><td>$[bzd_zassan/duureg]</td></tr>
+  <tr><td><b>ga</b></td><td>$[bzd_zassan/ga]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<LineStyle>
+			<color>ffff0000</color>
+			<width>3</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>4dffaa00</color>
+		</PolyStyle>
+	</Style>
+	<Placemark id="086B49A3DC2280A62506">
+		<name>13</name>
+		<styleUrl>#falseColor112</styleUrl>
+		<ExtendedData>
+			<SchemaData schemaUrl="#S_bzd_zassan_SDDSI0">
+				<SimpleData name="OBJECTID">255</SimpleData>
+				<SimpleData name="name">13-р хороо</SimpleData>
+				<SimpleData name="Shape_Leng">4029.21</SimpleData>
+				<SimpleData name="Shape_Area">1.02356e+06</SimpleData>
+				<SimpleData name="duureg">Баянзүрх</SimpleData>
+				<SimpleData name="ga">102</SimpleData>
+			</SchemaData>
+		</ExtendedData>
+		<Polygon>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						106.960167737389,47.91683680615943,0 106.959989204968,47.91488085269225,0 106.9600410618821,47.91466397657507,0 106.9601472112248,47.91464337568355,0 106.9605687185363,47.91263846983109,0 106.9618203108446,47.90797130848011,0 106.9618010350753,47.90715986522144,0 106.9698181004731,47.90707795759416,0 106.9698694262355,47.90738605096933,0 106.9698758141013,47.90772552351557,0 106.9724829885557,47.90883760551833,0 106.9745724782915,47.91013698101866,0 106.9775927784691,47.91202829310867,0 106.9733980927148,47.9157134988191,0 106.9640978334003,47.91650962664567,0 106.960167737389,47.91683680615943,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+</Document>
+</kml>

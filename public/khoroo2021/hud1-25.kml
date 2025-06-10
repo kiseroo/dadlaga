@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Хан-Уул дүүрэг 25 хороо.kmz</name>
+	<open>1</open>
+	<gx:CascadingStyle kml:id="__managed_style_2948DAD1A533D344DA17">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff9f3f30</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1E4F86B24433D344DA17">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.0.26.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff9f3f30</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0EA77AF61933D344DA17">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1E4F86B24433D344DA17</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2948DAD1A533D344DA17</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="ID_00004">
+		<name>25</name>
+		<Snippet maxLines="0"></Snippet>
+		<styleUrl>#__managed_style_0EA77AF61933D344DA17</styleUrl>
+		<MultiGeometry>
+			<Polygon>
+				<outerBoundaryIs>
+					<LinearRing>
+						<coordinates>
+							106.7868950177908,47.85800782410183,0 106.7877010639529,47.86067845624583,0 106.7880247920105,47.86185415254716,0 106.7881297608797,47.86270882775028,0 106.7881037443922,47.8634194648365,0 106.788006770496,47.86398478676853,0 106.7878737032088,47.86445969985532,0 106.7876902370148,47.86493055250303,0 106.787497746124,47.8653207170775,0 106.7871578392628,47.86587581641584,0 106.7867486161798,47.86650735813951,0 106.7851486347602,47.86586214634351,0 106.7853587244418,47.86558972290359,0 106.7818224239346,47.86449144187686,0 106.7816413818852,47.86433902634585,0 106.7815677836695,47.86397889963969,0 106.7809190188388,47.86143893690797,0 106.7815697525084,47.86141241474738,0 106.7819707390495,47.86081815500414,0 106.7821496230613,47.86042458548387,0 106.78057328649,47.86020313864071,0 106.7781715643823,47.8597388042371,0 106.7760688025167,47.85949099579022,0 106.7739925121318,47.85910844574205,0 106.7713731621861,47.85865526613135,0 106.7677819382912,47.85810317584215,0 106.7664098030474,47.85797396381993,0 106.7655415700099,47.85801530154639,0 106.7644885127219,47.85794210700351,0 106.7620824096018,47.85778735517473,0 106.7623221166723,47.85624297203561,0 106.7626655605671,47.85599690403392,0 106.7681092162673,47.85610606014661,0 106.7734058238196,47.85622746412621,0 106.7800357221708,47.85637156519561,0 106.7810386766935,47.85639721835701,0 106.7815817565927,47.85645027925703,0 106.7821478654316,47.85656840250981,0 106.7868950177908,47.85800782410183,0 
+						</coordinates>
+					</LinearRing>
+				</outerBoundaryIs>
+			</Polygon>
+		</MultiGeometry>
+	</Placemark>
+</Document>
+</kml>

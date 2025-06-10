@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="horoo_hil" xsi:schemaLocation="http://www.opengis.net/kml/2.2 http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd http://www.google.com/kml/ext/2.2 http://code.google.com/apis/kml/schema/kml22gx.xsd">
+	<name>sbd-6</name>
+	<Snippet maxLines="0"></Snippet>
+	<gx:CascadingStyle kml:id="__managed_style_066D0E9B501E13EF7983">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff58eeff</color>
+				<width>4.5</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_14DC7393241E13EF7982">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff58eeff</color>
+				<width>3</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_083D76773C1E13EF7982">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_14DC7393241E13EF7982</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_066D0E9B501E13EF7983</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="FeatureLayer0">
+		<name>sbd</name>
+		<open>1</open>
+		<Snippet maxLines="0"></Snippet>
+		<Placemark id="ID_00003">
+			<name>СБД_06</name>
+			<Snippet maxLines="0"></Snippet>
+			<description><![CDATA[<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<head>
+
+<META http-equiv="Content-Type" content="text/html">
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+</head>
+
+<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-collapse:collapse;padding:3px 3px 3px 3px">
+
+<tr style="text-align:center;font-weight:bold;background:#9CBCE2">
+
+<td>СБД_06</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-spacing:0px; padding:3px 3px 3px 3px">
+
+<tr>
+
+<td>OBJECTID_1</td>
+
+<td>4</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>KH_MON</td>
+
+<td>СБД_06</td>
+
+</tr>
+
+<tr>
+
+<td>KHOROO_POP</td>
+
+<td>5976</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>DUUREG</td>
+
+<td>Сүхбаатар</td>
+
+</tr>
+
+<tr>
+
+<td>UP_DATE</td>
+
+<td>3/1/2016</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>KH_ENG</td>
+
+<td>SB_06</td>
+
+</tr>
+
+<tr>
+
+<td>KHOROOID</td>
+
+<td>6</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>Shape_STAr</td>
+
+<td>462047.053955</td>
+
+</tr>
+
+<tr>
+
+<td>Shape_STLe</td>
+
+<td>3782.891788</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>area</td>
+
+<td>462047.05</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>]]></description>
+			<styleUrl>#__managed_style_083D76773C1E13EF7982</styleUrl>
+			<MultiGeometry>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								106.9193891954602,47.9170975143348,0 106.9184759621728,47.92220406215833,0 106.9228638680145,47.92258008718025,0 106.9225348192999,47.92446978274331,0 106.9192326469029,47.92628873160533,0 106.9191711653244,47.9267086471872,0 106.918984907734,47.92729804556676,0 106.9191876343058,47.92737486857141,0 106.9191377435049,47.92768780697398,0 106.9195822112251,47.92771403498029,0 106.9195621136813,47.92827430027584,0 106.919426483953,47.92923585325904,0 106.917200912247,47.92904660029659,0 106.9143712662682,47.92881417939995,0 106.9146708165063,47.92661016004753,0 106.9147194102604,47.92625260890971,0 106.9148617274448,47.92547360532042,0 106.9150141894719,47.92474155556417,0 106.9150960311771,47.92422369425401,0 106.9151891305132,47.92378292995581,0 106.9152855381908,47.92327990485907,0 106.9154343511968,47.92252529642595,0 106.9155107179688,47.92218628738949,0 106.9156078276585,47.92175519581135,0 106.9157426886408,47.92100270372559,0 106.9159008713745,47.9202743286234,0 106.9160352882915,47.91958593578165,0 106.9161778487121,47.91881446485058,0 106.9162588679469,47.91842668211772,0 106.9163321036077,47.91805599372761,0 106.9163594384948,47.91777959578669,0 106.916362727386,47.91774633801693,0 106.9163717289907,47.917610466383,0 106.9163730426143,47.91755094994599,0 106.9163888885032,47.916833333008,0 106.9162004767544,47.91682777003943,0 106.9161974743065,47.9168151899102,0 106.9166304922034,47.91674010946787,0 106.9193891954602,47.9170975143348,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+			</MultiGeometry>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>

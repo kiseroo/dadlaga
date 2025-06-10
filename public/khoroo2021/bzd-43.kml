@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>bzd-43.kml</name>
+	<Schema name="bzd_zassan" id="S_bzd_zassan_SDDSI0">
+		<SimpleField type="long" name="OBJECTID"><displayName>&lt;b&gt;OBJECTID&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="name"><displayName>&lt;b&gt;name&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="double" name="Shape_Leng"><displayName>&lt;b&gt;Shape_Leng&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="double" name="Shape_Area"><displayName>&lt;b&gt;Shape_Area&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="string" name="duureg"><displayName>&lt;b&gt;duureg&lt;/b&gt;</displayName>
+</SimpleField>
+		<SimpleField type="int" name="ga"><displayName>&lt;b&gt;ga&lt;/b&gt;</displayName>
+</SimpleField>
+	</Schema>
+	<Style id="falseColor10212">
+		<IconStyle>
+			<color>ffe7ebef</color>
+		</IconStyle>
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>OBJECTID</b></td><td>$[bzd_zassan/OBJECTID]</td></tr>
+  <tr><td><b>name</b></td><td>$[bzd_zassan/name]</td></tr>
+  <tr><td><b>Shape_Leng</b></td><td>$[bzd_zassan/Shape_Leng]</td></tr>
+  <tr><td><b>Shape_Area</b></td><td>$[bzd_zassan/Shape_Area]</td></tr>
+  <tr><td><b>duureg</b></td><td>$[bzd_zassan/duureg]</td></tr>
+  <tr><td><b>ga</b></td><td>$[bzd_zassan/ga]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<LineStyle>
+			<color>ffff0000</color>
+			<width>3</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>4dffaa00</color>
+		</PolyStyle>
+	</Style>
+	<StyleMap id="falseColor213">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#falseColor94</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#falseColor10212</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="falseColor94">
+		<IconStyle>
+			<color>ffe7ebef</color>
+		</IconStyle>
+		<BalloonStyle>
+			<text><![CDATA[<table border="0">
+  <tr><td><b>OBJECTID</b></td><td>$[bzd_zassan/OBJECTID]</td></tr>
+  <tr><td><b>name</b></td><td>$[bzd_zassan/name]</td></tr>
+  <tr><td><b>Shape_Leng</b></td><td>$[bzd_zassan/Shape_Leng]</td></tr>
+  <tr><td><b>Shape_Area</b></td><td>$[bzd_zassan/Shape_Area]</td></tr>
+  <tr><td><b>duureg</b></td><td>$[bzd_zassan/duureg]</td></tr>
+  <tr><td><b>ga</b></td><td>$[bzd_zassan/ga]</td></tr>
+</table>]]></text>
+		</BalloonStyle>
+		<LineStyle>
+			<color>ffff0000</color>
+			<width>3</width>
+		</LineStyle>
+		<PolyStyle>
+			<color>4dffaa00</color>
+		</PolyStyle>
+	</Style>
+	<Placemark id="008A0BD17A2280A62501">
+		<name>43</name>
+		<styleUrl>#falseColor213</styleUrl>
+		<ExtendedData>
+			<SchemaData schemaUrl="#S_bzd_zassan_SDDSI0">
+				<SimpleData name="OBJECTID">250</SimpleData>
+				<SimpleData name="name">43-р хороо</SimpleData>
+				<SimpleData name="Shape_Leng">2244.3</SimpleData>
+				<SimpleData name="Shape_Area">316835</SimpleData>
+				<SimpleData name="duureg">Баянзүрх</SimpleData>
+				<SimpleData name="ga">32</SimpleData>
+			</SchemaData>
+		</ExtendedData>
+		<Polygon>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						106.9353092892496,47.91275635804481,0 106.9352995743848,47.91275375139084,0 106.9352678284058,47.91275423169755,0 106.9309623709253,47.9128193183668,0 106.9302972244361,47.91279516492656,0 106.930299244614,47.91277280372294,0 106.9303219314941,47.91258627587122,0 106.9303440095366,47.91244137684707,0 106.9303482304761,47.91241366900998,0 106.9303812255823,47.91223103661777,0 106.9304466780914,47.91193256188939,0 106.9304556179431,47.91189179440784,0 106.9304851133327,47.91175630471434,0 106.9304961941315,47.91168311710145,0 106.9305002878717,47.91162451191456,0 106.9305013851661,47.9115627808809,0 106.930490874579,47.91141021211465,0 106.9304883833602,47.91132296596746,0 106.9304895182533,47.9112874252106,0 106.9304902665493,47.9112639759535,0 106.9304918315056,47.91125258446435,0 106.9305054822949,47.91115322209849,0 106.9305211813586,47.91105546019069,0 106.9305364378598,47.91100404189918,0 106.9305735939577,47.91090508143008,0 106.9306392896023,47.91072198084375,0 106.9307447175166,47.91043746403,0 106.9308282843804,47.9102150642933,0 106.9308872808205,47.91006708592198,0 106.9309303296276,47.90996960172265,0 106.9309781175068,47.90987410279286,0 106.9310386553311,47.9097630336475,0 106.9310810994372,47.90969343937171,0 106.9310888294802,47.90967847909174,0 106.9310977079673,47.9096612941205,0 106.931115040652,47.90961537988341,0 106.9311280191946,47.90956653631126,0 106.9311343899468,47.90952540887452,0 106.9311387635315,47.90946560672053,0 106.9311381565068,47.90931936959644,0 106.9311455280624,47.90924396603437,0 106.9311457756117,47.90922771086585,0 106.9311486604741,47.90921194670194,0 106.9311540996508,47.909198542891,0 106.9311635046523,47.90918418067678,0 106.9312039691902,47.90913951668132,0 106.9312301980045,47.90911199821429,0 106.9312625583174,47.90908263190443,0 106.9313819767072,47.90898702630555,0 106.9315222971021,47.90887498343789,0 106.9315274983092,47.90887082979634,0 106.93161061156,47.90879055979377,0 106.9316442773581,47.90876161769926,0 106.9317058434049,47.90871911693795,0 106.9318143133358,47.90865475837251,0 106.9319373717874,47.90858443875278,0 106.9319936004467,47.90855556401802,0 106.9321353726814,47.90848854635843,0 106.932198465226,47.90845654711366,0 106.9323179324985,47.9083898317782,0 106.9324160787828,47.90832938681809,0 106.9325098262649,47.90826905811528,0 106.9325363176498,47.90824887176498,0 106.9325573715697,47.90822951027342,0 106.9325935877092,47.90818613560572,0 106.9326216973769,47.90813900943567,0 106.9326380709065,47.90807238456329,0 106.9326602504212,47.90800678306956,0 106.9326893615051,47.90794048360809,0 106.9327276287989,47.90786915134692,0 106.9327686862987,47.90780346143109,0 106.9327958549393,47.90775425456043,0 106.9328031117348,47.90773181861776,0 106.9328085326281,47.90770529167308,0 106.932809867659,47.90767584983752,0 106.9328111859591,47.90764674930193,0 106.9328159091456,47.90751504118472,0 106.9381527141443,47.9074542902215,0 106.9381535087981,47.90745428310311,0 106.938201232918,47.90790824299759,0 106.9386271329506,47.90836809617753,0 106.938662897564,47.90915296018228,0 106.9386109187141,47.90919395220677,0 106.9384755754928,47.90918778340631,0 106.9384678493551,47.90934444041726,0 106.9384667277912,47.90936278077201,0 106.9383091017919,47.91025108600722,0 106.9383118937617,47.91269015091727,0 106.9353092892496,47.91275635804481,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+</Document>
+</kml>

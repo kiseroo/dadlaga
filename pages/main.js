@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 
 // Dynamically import the Map component with no SSR to avoid window is not defined errors
 const Map = dynamic(() => import('../components/Map'), {

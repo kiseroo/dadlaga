@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="horoo_hil" xsi:schemaLocation="http://www.opengis.net/kml/2.2 http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd http://www.google.com/kml/ext/2.2 http://code.google.com/apis/kml/schema/kml22gx.xsd">
+	<name>shd-3</name>
+	<Snippet maxLines="0"></Snippet>
+	<gx:CascadingStyle kml:id="__managed_style_2F359CB16A1E1404AB0E">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2f2fd3</color>
+				<width>4.5</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1B00C4887F1E1404AB0E">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href>
+				</Icon>
+			</IconStyle>
+			<LabelStyle>
+				<color>00000000</color>
+				<scale>0</scale>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2f2fd3</color>
+				<width>3</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40f5a542</color>
+			</PolyStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_04371D5C851E1404AB0E">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1B00C4887F1E1404AB0E</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_2F359CB16A1E1404AB0E</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Folder id="FeatureLayer0">
+		<name>horoo_hil</name>
+		<open>1</open>
+		<Snippet maxLines="0"></Snippet>
+		<Placemark id="ID_00120">
+			<name>СХД_03</name>
+			<Snippet maxLines="0"></Snippet>
+			<description><![CDATA[<html xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+<head>
+
+<META http-equiv="Content-Type" content="text/html">
+
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+</head>
+
+<body style="margin:0px 0px 0px 0px;overflow:auto;background:#FFFFFF;">
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-collapse:collapse;padding:3px 3px 3px 3px">
+
+<tr style="text-align:center;font-weight:bold;background:#9CBCE2">
+
+<td>СХД_03</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+<table style="font-family:Arial,Verdana,Times;font-size:12px;text-align:left;width:100%;border-spacing:0px; padding:3px 3px 3px 3px">
+
+<tr>
+
+<td>OBJECTID_1</td>
+
+<td>121</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>KH_MON</td>
+
+<td>СХД_03</td>
+
+</tr>
+
+<tr>
+
+<td>KHOROO_POP</td>
+
+<td>9474</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>DUUREG</td>
+
+<td>Сонгинохайрхан</td>
+
+</tr>
+
+<tr>
+
+<td>UP_DATE</td>
+
+<td>&lt;Null&gt;</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>KH_ENG</td>
+
+<td>SHD_03</td>
+
+</tr>
+
+<tr>
+
+<td>KHOROOID</td>
+
+<td>3</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>Shape_STAr</td>
+
+<td>1495973.71289</td>
+
+</tr>
+
+<tr>
+
+<td>Shape_STLe</td>
+
+<td>5485.53304</td>
+
+</tr>
+
+<tr bgcolor="#D4E4F3">
+
+<td>area</td>
+
+<td>1495973.71</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>]]></description>
+			<styleUrl>#__managed_style_04371D5C851E1404AB0E</styleUrl>
+			<MultiGeometry>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<coordinates>
+								106.7965164616647,47.91698993515927,0 106.7969035989123,47.9189438919862,0 106.7974025380485,47.91978499945302,0 106.7973482265544,47.92040726736564,0 106.7976516633351,47.92050711176685,0 106.7976615690686,47.92104834005448,0 106.7974466526742,47.92160706287486,0 106.7972145028043,47.92232253408096,0 106.7968533286578,47.92345969743195,0 106.7967651517774,47.92399304894731,0 106.7968954222425,47.92527803683254,0 106.7968169743598,47.92587232527882,0 106.796770052806,47.92627942231172,0 106.796329203222,47.92658306670619,0 106.7959517945568,47.92702597297436,0 106.7954003206448,47.9272647176774,0 106.7949700093264,47.92768075556605,0 106.7948455109744,47.92801205369622,0 106.7948846225311,47.92830473456752,0 106.7949466626152,47.92841133087671,0 106.7865276842475,47.92788887878164,0 106.7799260141316,47.92700659796868,0 106.7799444486523,47.9268889564388,0 106.78041688504,47.92610270458606,0 106.7808707116307,47.92572983199631,0 106.7811863813958,47.92526467338903,0 106.7813902486012,47.92498295093651,0 106.7814413708818,47.92460892136484,0 106.7813535872406,47.9240425140677,0 106.7817386447574,47.92360033169536,0 106.7818041471133,47.92323900395883,0 106.7821887958872,47.92296617293656,0 106.7825011641116,47.92240462471546,0 106.7826763302965,47.92189849707233,0 106.7828769510194,47.92088374939969,0 106.7831302772326,47.9204278139447,0 106.7832296030628,47.92001260585838,0 106.7835551626109,47.91938136887688,0 106.7836453253367,47.91919683144086,0 106.7838121878052,47.91911065064653,0 106.7833377228778,47.91782209241387,0 106.7829062472792,47.91736444151487,0 106.7825777454563,47.91702800049946,0 106.7823018226911,47.91641546401169,0 106.7820467182951,47.91632216473956,0 106.7820315683817,47.91622385557545,0 106.7821609259512,47.91609571519312,0 106.7821005223758,47.91577186262302,0 106.7817559403307,47.91552838172223,0 106.7816021484155,47.91488473307646,0 106.7816829499379,47.91447495836314,0 106.7818979129446,47.91442105282093,0 106.7825050084201,47.91444732412101,0 106.7827455871857,47.9140466046014,0 106.7828880350843,47.91409969089307,0 106.7834854812497,47.91420203985071,0 106.7842168602489,47.9143950180631,0 106.7845740632274,47.91445307114542,0 106.7845408540815,47.9145755223179,0 106.7846166796999,47.91532994219325,0 106.7861902198641,47.91611852789887,0 106.7872964462218,47.9163528281068,0 106.7877812305477,47.91646301364661,0 106.7878112950664,47.91646965009004,0 106.7882144781252,47.91648315853258,0 106.7884401870281,47.91649088528033,0 106.7886388901236,47.91649963429049,0 106.7890108818111,47.91651077180655,0 106.7892558435997,47.91651954838822,0 106.7896049184217,47.91652750862633,0 106.7897398170867,47.9165324212313,0 106.7899004067618,47.9165373830179,0 106.7902038189571,47.91654985580885,0 106.7904182446562,47.9165579948539,0 106.7904662947725,47.91653566434536,0 106.7907449035549,47.91640531058101,0 106.7909145061879,47.91630705650964,0 106.7911529849075,47.9161498953883,0 106.7912457120606,47.91608623629794,0 106.7915148500818,47.91586310222843,0 106.7934762418908,47.91497688022967,0 106.794032261621,47.91501900562572,0 106.7945066964225,47.91491937607306,0 106.795019390825,47.91503034637549,0 106.7955443353981,47.915878833297,0 106.7961455992849,47.91624720697687,0 106.7965164616647,47.91698993515927,0 
+							</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+			</MultiGeometry>
+		</Placemark>
+	</Folder>
+</Document>
+</kml>
