@@ -3,11 +3,10 @@ import { useRouter } from 'next/router';
 
 // No inline styles - we'll use the existing classes from main.js
 
-const KhorooSambarsPanel = () => {
-  const [districts, setDistricts] = useState({});
+const KhorooSambarsPanel = () => {  const [districts, setDistricts] = useState({});
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [khoroos, setKhoroos] = useState([]);
-  const [selectedKhoroo, setSelectedKhoroo] = useState('');
+  const [selectedKhoroo, setSelectedKhoroo] = useState('all');
   const [sambars, setSambars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,12 +32,12 @@ const KhorooSambarsPanel = () => {
     
     fetchDistricts();
   }, []);
-
-  // Fetch khoroos when district changes
+  // Fetch khoroos and sambars when district changes
   useEffect(() => {
     if (!selectedDistrict) {
       setKhoroos([]);
-      setSelectedKhoroo('');
+      setSelectedKhoroo('all');
+      setSambars([]);
       return;
     }
     
@@ -60,41 +59,101 @@ const KhorooSambarsPanel = () => {
         setLoading(false);
       }
     };
-    
-    fetchKhoroos();
-  }, [selectedDistrict]);
 
-  // Fetch sambars when the search button is clicked
-  const handleSearch = async () => {
-    if (!selectedDistrict || !selectedKhoroo) {
-      setError('Please select both a district and khoroo');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await fetch(
-        `http://localhost:3001/api/districts/${selectedDistrict}/khoroos/${selectedKhoroo}/sambars`
-      );
-      const data = await response.json();
-      
-      if (data.success) {
-        setSambars(data.data.sambars);
-        if (data.data.sambars.length === 0) {
-          setError('No sambars found in this khoroo');
+    const fetchSambarsByDistrict = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        // Use the general sambars endpoint with district query parameter
+        const response = await fetch(`http://localhost:3001/api/sambar?district=${selectedDistrict}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setSambars(data.data);
+          if (data.data.length === 0) {
+            setError('No sambars found in this district');
+          }
+        } else {
+          setError(data.message || 'Failed to load sambars');
         }
-      } else {
-        setError(data.message || 'Failed to load sambars');
+      } catch (error) {
+        console.error('Error fetching sambars by district:', error);
+        setError('Error loading sambars. Please try again.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching sambars:', error);
-      setError('Error loading sambars. Please try again.');
-    } finally {
-      setLoading(false);
+    };
+    
+    // Fetch both khoroos and sambars for the selected district
+    fetchKhoroos();
+    fetchSambarsByDistrict();
+    // Set selectedKhoroo to 'all' when a new district is selected
+    setSelectedKhoroo('all');
+  }, [selectedDistrict]);
+  // Handle khoroo selection changes
+  useEffect(() => {
+    // Skip if no district is selected
+    if (!selectedDistrict) return;
+    
+    // If "All Sambars" is selected, fetch all sambars for the district
+    if (selectedKhoroo === 'all') {
+      const fetchSambarsByDistrict = async () => {
+        try {
+          setLoading(true);
+          setError('');
+          
+          const response = await fetch(`http://localhost:3001/api/sambar?district=${selectedDistrict}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            setSambars(data.data);
+            if (data.data.length === 0) {
+              setError('No sambars found in this district');
+            }
+          } else {
+            setError(data.message || 'Failed to load sambars');
+          }
+        } catch (error) {
+          console.error('Error fetching sambars by district:', error);
+          setError('Error loading sambars. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchSambarsByDistrict();
+    } else if (selectedKhoroo) {
+      // If a specific khoroo is selected, fetch sambars for that khoroo
+      const fetchSambarsByKhoroo = async () => {
+        try {
+          setLoading(true);
+          setError('');
+          
+          const response = await fetch(
+            `http://localhost:3001/api/districts/${selectedDistrict}/khoroos/${selectedKhoroo}/sambars`
+          );
+          const data = await response.json();
+          
+          if (data.success) {
+            setSambars(data.data.sambars);
+            if (data.data.sambars.length === 0) {
+              setError('No sambars found in this khoroo');
+            }
+          } else {
+            setError(data.message || 'Failed to load sambars');
+          }
+        } catch (error) {
+          console.error('Error fetching sambars:', error);
+          setError('Error loading sambars. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchSambarsByKhoroo();
     }
-  };  // Handle viewing a sambar on the map
+  }, [selectedKhoroo, selectedDistrict]);// Handle viewing a sambar on the map
   const handleViewOnMap = (sambar) => {
     // Open the sambar details directly - this will work for both integrated and standalone use
     // Get the current query params and add our sambarId
@@ -126,8 +185,7 @@ const KhorooSambarsPanel = () => {
           ))}
         </select>
       </div>
-      
-      <div className="form-group">
+        <div className="form-group">
         <label htmlFor="khoroo-select">Khoroo:</label>
         <select 
           id="khoroo-select"
@@ -135,33 +193,34 @@ const KhorooSambarsPanel = () => {
           value={selectedKhoroo}
           onChange={(e) => setSelectedKhoroo(e.target.value)}
           disabled={!selectedDistrict || loading}
-        >
-          <option value="">-- Select Khoroo --</option>
-          {khoroos.map((khoroo) => (
-            <option key={`${khoroo.districtCode}-${khoroo.number}`} value={khoroo.number}>
-              {khoroo.name || `${khoroo.number}-р хороо`}
-            </option>
-          ))}
+        >          <option value="all">All Sambars</option>
+          {khoroos
+            .slice()
+            .sort((a, b) => parseInt(a.number) - parseInt(b.number))
+            .map((khoroo) => (
+              <option key={`${khoroo.districtCode}-${khoroo.number}`} value={khoroo.number}>
+                {khoroo.name || `${khoroo.number}-р хороо`}
+              </option>
+            ))}
         </select>
-      </div>
-      
-      <div className="button-container">
-        <button 
-          className="submit-button"
-          onClick={handleSearch}
-          disabled={!selectedDistrict || !selectedKhoroo || loading}
-        >
-          {loading ? 'Searching...' : 'Search Sambars'}
-        </button>
+      </div>      <div className="button-container">
+        {/* Remove the search button since we're now handling changes automatically */}
       </div>
       
       {error && (
         <p className="error-message">{error}</p>
       )}
       
+      {loading && (
+        <p className="loading-message">Loading sambars...</p>
+      )}
+      
       {sambars.length > 0 && (
-        <div>
-          <h3>Results ({sambars.length} sambar{sambars.length !== 1 ? 's' : ''})</h3>
+        <div>          <h3>Results ({sambars.length} sambar{sambars.length !== 1 ? 's' : ''})
+            {selectedKhoroo === 'all' 
+              ? ` - All sambars in ${districts[selectedDistrict]?.name || 'Selected District'}`
+              : ` - Khoroo ${selectedKhoroo}`}
+          </h3>
           <table className="user-list">
             <thead>
               <tr>
