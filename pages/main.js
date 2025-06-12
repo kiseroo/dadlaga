@@ -12,6 +12,11 @@ const MapEdit = dynamic(
   { ssr: false }
 );
 
+const KhorooSambarsPanel = dynamic(
+  () => import('../components/KhorooSambarsPanel'),
+  { ssr: false }
+);
+
 export default function Main() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -44,8 +49,32 @@ export default function Main() {
             fetchUsers();
         } else if (activeTab === 'sambars') {
             fetchSambars();
+            
+            // Check if there's a sambarId in the URL query parameters
+            const { sambarId } = router.query;
+            if (sambarId) {
+                // Set activeTab to sambars to make sure we're on the right tab
+                setActiveTab('sambars');
+                
+                // Fetch the specific sambar to view/edit
+                const fetchSambarById = async () => {
+                    try {
+                        const response = await fetch(`http://localhost:3001/api/sambar/${sambarId}`);
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // Found the sambar, let's view it
+                            handleViewSambar(data.data);
+                        }
+                    } catch (error) {
+                        console.error("Error fetching sambar by ID:", error);
+                    }
+                };
+                
+                fetchSambarById();
+            }
         }
-    }, [activeTab]);    
+    }, [activeTab, router.query]);
     const fetchUsers = async () => {
         setLoading(true);
         try {
@@ -285,9 +314,7 @@ export default function Main() {
                 </div>
             </div>
         );
-    };
-
-    const renderSambarList = () => {
+    };    const renderSambarList = () => {
         if (loading) {
             return <p>Loading locations...</p>;
         }
@@ -297,7 +324,13 @@ export default function Main() {
         }
         
         return (
-            <div>                <div className="content-card">
+            <div>                {/* Khoroo search section */}
+                <div className="content-card">
+                    <h2>Search Sambars by Khoroo</h2>
+                    <KhorooSambarsPanel />
+                </div>
+
+                <div className="content-card">
                     <h2>{editingSambar ? 'Edit Location' : 'Location List'}</h2>
                     {editingSambar && (
                         <form onSubmit={handleUpdateSambar} className="user-form">
@@ -309,9 +342,7 @@ export default function Main() {
                                 className="input-field"
                                 value={sambarFormData.name}
                                 onChange={handleSambarInputChange}
-                            />
-                              <div className="map-edit-wrapper">
-                                <MapEdit 
+                            />                              <div className="map-edit-wrapper">                                <MapEdit 
                                     key={`edit-map-${editingSambar._id}`}
                                     initialLocation={{
                                         lat: parseFloat(sambarFormData.coordinates.lat),
@@ -326,6 +357,26 @@ export default function Main() {
                                                 lng: newLocation.lng
                                             }
                                         }));
+                                    }}
+                                    onKhorooInfoChange={(updatedKhorooInfo) => {
+                                        // Store the updated district and khoroo info
+                                        console.log("KhorooInfo updated:", updatedKhorooInfo);
+                                        // This will be accessible in handleUpdateSambar
+                                        if (!sambarFormData.khorooInfo) {
+                                            setSambarFormData(prev => ({
+                                                ...prev,
+                                                khorooInfo: updatedKhorooInfo
+                                            }));
+                                        } else {
+                                            setSambarFormData(prev => ({
+                                                ...prev,
+                                                khorooInfo: {
+                                                    ...prev.khorooInfo,
+                                                    district: updatedKhorooInfo.district,
+                                                    khoroo: updatedKhorooInfo.khoroo
+                                                }
+                                            }));
+                                        }
                                     }}
                                 />
                             </div>                              {/* test */}
@@ -393,7 +444,8 @@ export default function Main() {
             coordinates: {
                 lat: parseFloat(sambar.coordinates.lat),
                 lng: parseFloat(sambar.coordinates.lng)
-            }
+            },
+            khorooInfo: sambar.khorooInfo ? { ...sambar.khorooInfo } : null
         });
     };
 
@@ -424,36 +476,46 @@ export default function Main() {
     };    const handleUpdateSambar = async (e) => {
         e.preventDefault();
         
-        try {
-            const originalName = editingSambar.name;
-            let district = null;
+        try {            let district = null;
             let khoroo = null;
             
-            if (originalName && originalName.match(/^[a-z]{3}-\d+$/i)) {
-                const parts = originalName.split('-');
-                district = parts[0].toLowerCase();
-                khoroo = parts[1];
-                console.log("Extracted district/khoroo from name:", district, khoroo);
+            // Use the khorooInfo from our form data which is updated by the MapEdit component
+            if (sambarFormData.khorooInfo && sambarFormData.khorooInfo.district && sambarFormData.khorooInfo.khoroo) {
+                district = sambarFormData.khorooInfo.district;
+                khoroo = sambarFormData.khorooInfo.khoroo;
+                console.log("Using district/khoroo from form data:", district, khoroo);
             }
-            
-            if ((!district || !khoroo) && editingSambar.khorooInfo) {
+            // Then try to get from existing khorooInfo
+            else if (editingSambar.khorooInfo) {
                 district = editingSambar.khorooInfo.district;
-                
-                if (editingSambar.khorooInfo.khoroo && editingSambar.khorooInfo.khoroo !== "All") {
-                    khoroo = editingSambar.khorooInfo.khoroo;
+                khoroo = editingSambar.khorooInfo.khoroo;
+                console.log("Using district/khoroo from existing khorooInfo:", district, khoroo);
+            }
+            // Finally try extracting from name as fallback
+            else {
+                const originalName = editingSambar.name;
+                if (originalName && originalName.match(/^[a-z]{3}-\d+$/i)) {
+                    const parts = originalName.split('-');
+                    district = parts[0].toLowerCase();
+                    khoroo = parts[1];
+                    console.log("Extracted district/khoroo from name:", district, khoroo);
                 } else if (originalName && originalName.match(/\d+$/)) {
-                    const match = originalName.match(/\d+$/);
-                    khoroo = match[0];
+                    // If we at least have district from somewhere
+                    if (district) {
+                        const match = originalName.match(/\d+$/);
+                        khoroo = match[0];
+                        console.log("Extracted khoroo number from name:", khoroo);
+                    }
                 }
             }
             
             if (!district || !khoroo) {
-                console.error("Could not extract district/khoroo from sambar:", editingSambar);
+                console.error("Could not extract district/khoroo information:", editingSambar);
             }            
             let updatedName = sambarFormData.name; 
             
             const updatedKhorooInfo = {
-                name: editingSambar.khorooInfo?.name || `${district}_${khoroo}`,
+                name: `${district}_${khoroo}`,
                 district: district,
                 khoroo: khoroo 
             };
@@ -525,6 +587,21 @@ export default function Main() {
         }
     };
 
+    const handleViewSambar = (sambar) => {
+        // Set the selected sambar for viewing
+        setEditingSambar(sambar);
+        
+        // Fill the form data but don't allow editing (view only)
+        setSambarFormData({
+            name: sambar.name,
+            coordinates: {
+                lat: parseFloat(sambar.coordinates.lat),
+                lng: parseFloat(sambar.coordinates.lng)
+            },
+            khorooInfo: sambar.khorooInfo ? { ...sambar.khorooInfo } : null
+        });
+    };
+
     return (
         <div className="main-container">
             <div className="main-header">
@@ -536,8 +613,7 @@ export default function Main() {
                     Logout
                 </button>
             </div>
-            
-            <div className="tabs">
+              <div className="tabs">
                 <button 
                     className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
                     onClick={() => setActiveTab('dashboard')}
@@ -549,8 +625,7 @@ export default function Main() {
                     onClick={() => setActiveTab('users')}
                 >
                     Manage Users
-                </button>
-                <button 
+                </button>                <button 
                     className={`tab ${activeTab === 'sambars' ? 'active' : ''}`}
                     onClick={() => setActiveTab('sambars')}
                 >

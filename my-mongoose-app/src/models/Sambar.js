@@ -24,11 +24,15 @@ const sambarSchema = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    },
-    updatedAt: {
+    },    updatedAt: {
         type: Date,
         default: Date.now
     }
 });
+
+// Create indexes for efficient querying by district and khoroo
+sambarSchema.index({ 'khorooInfo.district': 1 });
+sambarSchema.index({ 'khorooInfo.khoroo': 1 });
+sambarSchema.index({ 'khorooInfo.district': 1, 'khorooInfo.khoroo': 1 });
 
 module.exports = mongoose.model('Sambar', sambarSchema);

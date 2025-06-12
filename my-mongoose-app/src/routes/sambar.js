@@ -13,10 +13,10 @@ const validateObjectId = (req, res, next) => {
     next();
 };
 
-router.post('/sambar', sambarController.createSambar);
-router.get('/sambar', sambarController.getAllSambars);
-router.get('/sambar/:id', validateObjectId, sambarController.getSambarById);
-router.put('/sambar/:id', validateObjectId, sambarController.updateSambar);
-router.delete('/sambar/:id', validateObjectId, sambarController.deleteSambar);
+router.post('/', sambarController.createSambar);
+router.get('/', sambarController.getAllSambars);
+router.get('/:id', validateObjectId, sambarController.getSambarById);
+router.put('/:id', validateObjectId, sambarController.updateSambar);
+router.delete('/:id', validateObjectId, sambarController.deleteSambar);
 
 module.exports = router;

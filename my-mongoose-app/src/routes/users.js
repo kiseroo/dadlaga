@@ -14,10 +14,10 @@ const validateObjectId = (req, res, next) => {
 };
 
 router.post('/login', userController.login);
-router.post('/users', userController.createUser);
-router.get('/users', userController.getAllUsers);
-router.get('/users/:id', validateObjectId, userController.getUserById);
-router.put('/users/:id', validateObjectId, userController.updateUser);
+router.post('/', userController.createUser);
+router.get('/', userController.getAllUsers);
+router.get('/:id', validateObjectId, userController.getUserById);
+router.put('/:id', validateObjectId, userController.updateUser);
 router.delete('/users/:id', validateObjectId, userController.deleteUser);
 
 module.exports = router;

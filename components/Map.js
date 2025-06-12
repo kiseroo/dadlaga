@@ -12,22 +12,11 @@ const center = {
   lng: 106.9177
 };
 
-const districtData = {
-  'bgd': { name: 'Баянгол дүүрэг', khorooCount: 25 },
-  'bhd': { name: 'Багахангай дүүрэг', khorooCount: 2 },
-  'bnd': { name: 'Бага нуур дүүрэг', khorooCount: 5 },
-  'bzd': { name: 'Баянзүрх дүүрэг', khorooCount: 43 },
-  'chd': { name: 'Чингэлтэй дүүрэг', khorooCount: 19 },
-  'hud': { name: 'Хан-Уул дүүрэг', khorooCount: 25 },
-  'hud1': { name: 'Хан-Уул дүүрэг 1', khorooCount: 25 },
-  'sbd': { name: 'Сүхбаатар дүүрэг', khorooCount: 20 },
-  'shd': { name: 'Сонгинохайрхан дүүрэг', khorооCount: 43 }
-};
-
 function Map() {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationName, setLocationName] = useState('');
   const [saveStatus, setSaveStatus] = useState({ message: '', isError: false });
+  const [districtData, setDistrictData] = useState({});
   const [loading, setLoading] = useState(false);
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
@@ -45,6 +34,27 @@ function Map() {
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
   });
+
+  // Fetch district data from backend
+  useEffect(() => {
+    const fetchDistrictData = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/districts');
+        const data = await response.json();
+        
+        if (data.success) {
+          setDistrictData(data.data);
+          console.log("District data fetched successfully:", data.data);
+        } else {
+          console.error('Failed to fetch district data');
+        }
+      } catch (error) {
+        console.error('Error fetching district data:', error);
+      }
+    };
+    
+    fetchDistrictData();
+  }, []);
 
   
   useEffect(() => {

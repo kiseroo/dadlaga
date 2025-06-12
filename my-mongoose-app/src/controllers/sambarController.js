@@ -14,7 +14,22 @@ const asyncHandler = (controller, errorMessage) => async (req, res) => {
 };
 
 const getAllSambarsController = async (req, res) => {
-    const sambars = await Sambar.find({}).sort({ createdAt: -1 });
+    // Extract query parameters for filtering
+    const { district, khoroo } = req.query;
+    
+    // Build filter object based on query parameters
+    const filter = {};
+    
+    if (district) {
+        filter['khorooInfo.district'] = district;
+    }
+    
+    if (khoroo) {
+        filter['khorooInfo.khoroo'] = khoroo;
+    }
+    
+    // Get sambars with optional filtering
+    const sambars = await Sambar.find(filter).sort({ createdAt: -1 });
     
     res.json({
         success: true,
