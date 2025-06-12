@@ -81,7 +81,6 @@ function Map() {
     }
     
   };
-  
   const handleSaveLocation = async () => {
     if (!selectedLocation || !locationName.trim()) {
       setSaveStatus({
@@ -94,16 +93,61 @@ function Map() {
     setLoading(true);
     setSaveStatus({ message: '', isError: false });
     
-    try {
+    try {      
+      let savedKhorooInfo = { ...khorooInfo } || {};
+      
+      const district = selectedDistrict.toLowerCase();
+      
+      let khoroo = selectedKhoroo;
+      
+      if (!khoroo && khorooInfo && khorooInfo.khoroo) {
+        khoroo = khorooInfo.khoroo;
+      }
+      
+      if (district && khoroo) {
+        if (khoroo !== "All") {
+          const khorooNumber = parseInt(khoroo, 10);
+          const formattedKhoroo = khorooNumber < 10 ? `${khorooNumber}` : `${khorooNumber}`;
+          
+          savedKhorooInfo = {
+            name: savedKhorooInfo.name || `${district.toUpperCase()}_${formattedKhoroo}`,
+            district: district,
+            khoroo: formattedKhoroo
+          };
+          
+          console.log(`Saving location with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
+        } else {
+          const match = locationName.match(/\d+/);
+          if (match) {
+            const extractedKhoroo = match[0];
+            savedKhorooInfo = {
+              name: savedKhorooInfo.name || `${district.toUpperCase()}_${extractedKhoroo}`,
+              district: district,
+              khoroo: extractedKhoroo
+            };
+          } else {
+            savedKhorooInfo = {
+              name: savedKhorooInfo.name || `${district.toUpperCase()}`,
+              district: district,
+              khoroo: khoroo
+            };
+          }
+        }
+      } else {
+        console.warn("Could not determine both district and khoroo for saving", {
+          district, khoroo, locationName, khorooInfo
+        });
+      }
+      
       const response = await fetch('http://localhost:3001/api/sambar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: locationName,
+          name: locationName, 
           coordinates: selectedLocation,
-          khorooInfo: khorooInfo
+          khorooInfo: savedKhorooInfo
         })
       });
       
@@ -151,20 +195,32 @@ function Map() {
     const count = districtData[selectedDistrict].khorooCount;
     return Array.from({ length: count }, (_, i) => i + 1);
   };
-  
-  
-  const handleKmlClick = (event) => {
+    const handleKmlClick = (event) => {
     if (event && event.featureData) {
       
       const featureData = event.featureData;
       if (featureData.name) {
-        setKhorooInfo({
+        const khorooInfoData = {
           name: featureData.name,
-          district: selectedDistrict,
-          khoroo: selectedKhoroo || "All"
-        });
+          district: selectedDistrict.toLowerCase(),
+          khoroo: selectedKhoroo || null 
+        };
+        
+        if (selectedKhoroo) {
+          khorooInfoData.khoroo = selectedKhoroo;
+        } else {
+          const match = featureData.name.match(/\d+/);
+          if (match) {
+            khorooInfoData.khoroo = match[0];
+            console.log("Extracted khoroo number from feature name:", khorooInfoData.khoroo);
+          }
+        }
+        
+        setKhorooInfo(khorooInfoData);
+        
+        
+        console.log("Khoroo selected:", khorooInfoData);
       }
-      
       
       if (event.latLng) {
         setSelectedLocation({
@@ -174,7 +230,25 @@ function Map() {
       }
     }
   };
+  const [savedLocations, setSavedLocations] = useState([]);
   
+  useEffect(() => {
+    const fetchSavedLocations = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/sambar');
+        const data = await response.json();
+        
+        if (data.success) {
+          setSavedLocations(data.data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching saved locations:', error);
+      }
+    };
+    
+    fetchSavedLocations();
+  }, []);
+
   return isLoaded ? (
     <div className="map-container" style={{ position: 'relative', width: '100%', height: '80vh' }}>
       <GoogleMap
@@ -192,9 +266,33 @@ function Map() {
           mapTypeControl: true
         }}
       >
+        {/* Show current selected loc */}
         {selectedLocation && (
-          <Marker position={selectedLocation} />
+          <Marker 
+            position={selectedLocation}
+            animation={google.maps.Animation.BOUNCE}
+          />
         )}
+        
+        {/* ulaan loc save */}
+        {savedLocations.map(location => (
+          <Marker 
+            key={location._id}
+            position={{
+              lat: location.coordinates.lat,
+              lng: location.coordinates.lng
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: '#FF0000',
+              fillOpacity: 0.8,
+              strokeColor: '#FF0000',
+              strokeWeight: 2,
+              scale: 8
+            }}
+            title={location.name}
+          />
+        ))}
         
         {kmlUrl && (
           <KmlLayer 
@@ -214,7 +312,7 @@ function Map() {
           />
         )}
       </GoogleMap>
-        {/* Combined overlay for controls and info */}
+        {/* overlay */}
       <div style={{
         position: 'absolute',
         top: '10px',

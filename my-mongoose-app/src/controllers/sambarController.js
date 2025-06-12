@@ -24,7 +24,7 @@ const getAllSambarsController = async (req, res) => {
 };
 
 const createSambarController = async (req, res) => {
-    const { name, coordinates } = req.body;
+    const { name, coordinates, khorooInfo } = req.body;
     
     if (!name || !coordinates || !coordinates.lat || !coordinates.lng) {
         return res.status(400).json({
@@ -35,7 +35,8 @@ const createSambarController = async (req, res) => {
     
     const newSambar = new Sambar({
         name,
-        coordinates
+        coordinates,
+        khorooInfo
     });
     
     await newSambar.save();

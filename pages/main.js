@@ -2,10 +2,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
-// Dynamically import the Map component with no SSR to avoid window is not defined errors
-const Map = dynamic(() => import('../components/Map'), {
-  ssr: false
-});
+const Map = dynamic(
+  () => import('../components/Map').then(mod => mod.default),
+  { ssr: false }
+);
+
+const MapEdit = dynamic(
+  () => import('../components/MapEdit'),
+  { ssr: false }
+);
 
 export default function Main() {
     const router = useRouter();
@@ -292,8 +297,7 @@ export default function Main() {
         }
         
         return (
-            <div>
-                <div className="content-card">
+            <div>                <div className="content-card">
                     <h2>{editingSambar ? 'Edit Location' : 'Location List'}</h2>
                     {editingSambar && (
                         <form onSubmit={handleUpdateSambar} className="user-form">
@@ -306,26 +310,25 @@ export default function Main() {
                                 value={sambarFormData.name}
                                 onChange={handleSambarInputChange}
                             />
-                            <input
-                                type="number"
-                                name="lat"
-                                placeholder="Latitude"
-                                required
-                                step="any"
-                                className="input-field"
-                                value={sambarFormData.coordinates.lat}
-                                onChange={handleSambarInputChange}
-                            />
-                            <input
-                                type="number"
-                                name="lng"
-                                placeholder="Longitude"
-                                required
-                                step="any"
-                                className="input-field"
-                                value={sambarFormData.coordinates.lng}
-                                onChange={handleSambarInputChange}
-                            />
+                              <div className="map-edit-wrapper">
+                                <MapEdit 
+                                    key={`edit-map-${editingSambar._id}`}
+                                    initialLocation={{
+                                        lat: parseFloat(sambarFormData.coordinates.lat),
+                                        lng: parseFloat(sambarFormData.coordinates.lng)
+                                    }}
+                                    sambar={editingSambar}
+                                    onLocationChange={(newLocation) => {
+                                        setSambarFormData(prev => ({
+                                            ...prev,
+                                            coordinates: {
+                                                lat: newLocation.lat,
+                                                lng: newLocation.lng
+                                            }
+                                        }));
+                                    }}
+                                />
+                            </div>                              {/* test */}
                             <div className="button-container">
                                 <button type="button" onClick={handleCancelSambarEdit} className="cancel-button">
                                     Cancel
@@ -382,15 +385,14 @@ export default function Main() {
                 </div>
             </div>
         );
-    };
-
-    const handleEditSambar = (sambar) => {
+    };    const handleEditSambar = (sambar) => {
         setEditingSambar(sambar);
+        
         setSambarFormData({
             name: sambar.name,
             coordinates: {
-                lat: sambar.coordinates.lat,
-                lng: sambar.coordinates.lng
+                lat: parseFloat(sambar.coordinates.lat),
+                lng: parseFloat(sambar.coordinates.lng)
             }
         });
     };
@@ -419,23 +421,75 @@ export default function Main() {
                 [name]: value
             }));
         }
-    };
-
-    const handleUpdateSambar = async (e) => {
+    };    const handleUpdateSambar = async (e) => {
         e.preventDefault();
         
         try {
+            const originalName = editingSambar.name;
+            let district = null;
+            let khoroo = null;
+            
+            if (originalName && originalName.match(/^[a-z]{3}-\d+$/i)) {
+                const parts = originalName.split('-');
+                district = parts[0].toLowerCase();
+                khoroo = parts[1];
+                console.log("Extracted district/khoroo from name:", district, khoroo);
+            }
+            
+            if ((!district || !khoroo) && editingSambar.khorooInfo) {
+                district = editingSambar.khorooInfo.district;
+                
+                if (editingSambar.khorooInfo.khoroo && editingSambar.khorooInfo.khoroo !== "All") {
+                    khoroo = editingSambar.khorooInfo.khoroo;
+                } else if (originalName && originalName.match(/\d+$/)) {
+                    const match = originalName.match(/\d+$/);
+                    khoroo = match[0];
+                }
+            }
+            
+            if (!district || !khoroo) {
+                console.error("Could not extract district/khoroo from sambar:", editingSambar);
+            }            
+            let updatedName = sambarFormData.name; 
+            
+            const updatedKhorooInfo = {
+                name: editingSambar.khorooInfo?.name || `${district}_${khoroo}`,
+                district: district,
+                khoroo: khoroo 
+            };
+            
+           
+            if (khoroo && khoroo.length === 1 && parseInt(khoroo) < 10) {
+                console.log("Preserving single-digit khoroo format:", khoroo);
+            }
+            
+            const updateData = {
+                name: updatedName, 
+                coordinates: {
+                    lat: Number(sambarFormData.coordinates.lat),
+                    lng: Number(sambarFormData.coordinates.lng)
+                },
+                khorooInfo: updatedKhorooInfo
+            };
+            
+            console.log("Updating sambar with data:", updateData);
+            
             const res = await fetch(`http://localhost:3001/api/sambar/${editingSambar._id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(sambarFormData)
+                body: JSON.stringify(updateData)
             });
             
             const data = await res.json();
             if (data.success) {
                 setSambars(sambars.map(sambar => 
                     sambar._id === editingSambar._id 
-                    ? { ...sambar, ...sambarFormData } 
+                    ? { 
+                        ...sambar, 
+                        name: updateData.name,
+                        coordinates: updateData.coordinates,
+                        khorooInfo: updateData.khorooInfo
+                    } 
                     : sambar
                 ));
                 handleCancelSambarEdit();

@@ -374,3 +374,23 @@ body {
   border-radius: 4px;
   font-size: 0.9rem;
 }
+
+/* Map edit styles */
+.map-edit-wrapper {
+  width: 100%;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.map-edit-container .input-field {
+  margin-bottom: 10px;
+}
+
+/* Make sure input fields look good */
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}

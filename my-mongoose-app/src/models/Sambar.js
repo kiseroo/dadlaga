@@ -16,6 +16,11 @@ const sambarSchema = new mongoose.Schema({
             required: true
         }
     },
+    khorooInfo: {
+        name: String,
+        district: String,
+        khoroo: String
+    },
     createdAt: {
         type: Date,
         default: Date.now
