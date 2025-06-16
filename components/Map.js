@@ -26,16 +26,43 @@ function Map() {
   const [selectedKhoroo, setSelectedKhoroo] = useState('');
   const [kmlUrl, setKmlUrl] = useState('');
   const [kmlLoading, setKmlLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");  const [khorooData, setKhorooData] = useState({});
   const [khorooInfo, setKhorooInfo] = useState(null);
-  
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
-    libraries: ['geometry']
-  });
-
-  // Fetch district data from backend
+    // Fetch khoroo data for the selected district
+  useEffect(() => {
+    if (selectedDistrict) {
+      if (!khorooData[selectedDistrict]) {
+        const fetchKhorooData = async () => {
+          try {
+            const response = await fetch(`http://localhost:3001/api/khoroos/district/${selectedDistrict}`);
+            const data = await response.json();
+            
+            if (data.success) {
+              // Update the nested khoroo data structure for this district
+              const updatedKhorooData = { ...khorooData };
+              
+              if (!updatedKhorooData[selectedDistrict]) {
+                updatedKhorooData[selectedDistrict] = {};
+              }
+              
+              data.data.forEach(khoroo => {
+                updatedKhorooData[selectedDistrict][khoroo.number] = khoroo;
+              });
+              
+              setKhorooData(updatedKhorooData);
+              console.log("Khoroo data updated for district:", selectedDistrict, updatedKhorooData[selectedDistrict]);
+            } else {
+              console.error('Failed to fetch khoroo data');
+            }
+          } catch (error) {
+            console.error('Error fetching khoroo data:', error);
+          }
+        };
+        
+        fetchKhorooData();
+      }
+    }
+  }, [selectedDistrict, khorooData]);// Fetch district data from backend
   useEffect(() => {
     const fetchDistrictData = async () => {
       try {
@@ -43,8 +70,13 @@ function Map() {
         const data = await response.json();
         
         if (data.success) {
-          setDistrictData(data.data);
-          console.log("District data fetched successfully:", data.data);
+          // Convert array to object with code as key for easier access
+          const districtsObject = {};
+          data.data.forEach(district => {
+            districtsObject[district.code] = district;
+          });
+          setDistrictData(districtsObject);
+          console.log("District data fetched successfully:", districtsObject);
         } else {
           console.error('Failed to fetch district data');
         }
@@ -53,39 +85,87 @@ function Map() {
       }
     };
     
+    // Also fetch all khoroos at startup to have all boundaries available
+    const fetchAllKhoroos = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/khoroos');
+        const data = await response.json();
+        
+        if (data.success) {
+          // Create a nested structure by district and khoroo number
+          const khoroosByDistrict = {};
+          
+          data.data.forEach(khoroo => {
+            const district = khoroo.districtCode;
+            const number = khoroo.number;
+            
+            if (!khoroosByDistrict[district]) {
+              khoroosByDistrict[district] = {};
+            }
+            
+            khoroosByDistrict[district][number] = khoroo;
+          });
+          
+          setKhorooData(khoroosByDistrict);
+          console.log("All khoroo data fetched successfully:", khoroosByDistrict);
+        } else {
+          console.error('Failed to fetch all khoroo data');
+        }
+      } catch (error) {
+        console.error('Error fetching all khoroo data:', error);
+      }
+    };
+    
     fetchDistrictData();
+    fetchAllKhoroos();
   }, []);
-
-  
   useEffect(() => {
     if (selectedDistrict) {
       setKmlLoading(true);
       
-      let url;
+      let url = null;
+      let errorMsg = null;
+      
       if (selectedKhoroo) {
-        
-        url = `https://datacenter.ublight.mn/images/kml/khoroo2021/${selectedDistrict}-${selectedKhoroo}.kml`;
+        // Use the khoroo data from the database if available
+        if (khorooData[selectedKhoroo] && khorooData[selectedKhoroo].boundaries) {
+          url = khorooData[selectedKhoroo].boundaries;
+        } else {
+          errorMsg = `No boundary data found for khoroo ${selectedKhoroo} in district ${selectedDistrict}`;
+          console.error(errorMsg);
+        }
       } else {
-        
-        url = `https://datacenter.ublight.mn/images/kml/khoroo2021/${selectedDistrict}.kml`;
+        // Use the district boundaries from the database if available
+        if (districtData[selectedDistrict] && districtData[selectedDistrict].boundaries) {
+          url = districtData[selectedDistrict].boundaries;
+        } else {
+          errorMsg = `No boundary data found for district ${selectedDistrict}`;
+          console.error(errorMsg);
+        }
       }
       
-      setKmlUrl(url);
-      setKmlLoading(false);
+      if (url) {
+        setKmlUrl(url);
+        setErrorMessage('');
+      } else {
+        setKmlUrl('');
+        setErrorMessage(errorMsg || 'Boundary data not available');
+      }
       
+      setKmlLoading(false);
       setSelectedLocation(null);
       setKhorooInfo(null);
     } else {
       setKmlUrl('');
+      setErrorMessage('');
       setSelectedLocation(null);
       setKhorooInfo(null);
     }
-  }, [selectedDistrict, selectedKhoroo]);
-
+  }, [selectedDistrict, selectedKhoroo, districtData, khorooData]);
   const handleMapClick = (event) => {
     
     if (!kmlUrl) {
-      setErrorMessage("Please select a district first");
+      setErrorMessage(errorMessage || "Please select a district first");
       setTimeout(() => setErrorMessage(""), 3000);
       return;
     }
@@ -198,11 +278,10 @@ function Map() {
     setKhorooInfo(null);
   };
   
-  
-  const generateKhorooOptions = () => {
+    const generateKhorooOptions = () => {
     if (!selectedDistrict || !districtData[selectedDistrict]) return [];
     
-    const count = districtData[selectedDistrict].khorooCount;
+    const count = districtData[selectedDistrict].khorooCount || 0;
     return Array.from({ length: count }, (_, i) => i + 1);
   };
     const handleKmlClick = (event) => {

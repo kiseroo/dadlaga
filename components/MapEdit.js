@@ -73,13 +73,38 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
       khoroo: parts[1]
     };
   };
+    const [khorooData, setKhorooData] = useState({});
   
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
-    libraries: ['geometry']
-  });
-
+  // Fetch khoroo data for the selected district
+  useEffect(() => {
+    if (selectedDistrict) {
+      const fetchKhorooData = async () => {
+        try {
+          const response = await fetch(`http://localhost:3001/api/khoroos/district/${selectedDistrict}`);
+          const data = await response.json();
+          
+          if (data.success) {
+            // Organize khoroos by number for easy access
+            const khoroosObject = {};
+            data.data.forEach(khoroo => {
+              khoroosObject[khoroo.number] = khoroo;
+            });
+            setKhorooData(khoroosObject);
+            console.log("Khoroo data fetched successfully for district:", selectedDistrict, khoroosObject);
+          } else {
+            console.error('Failed to fetch khoroo data');
+          }
+        } catch (error) {
+          console.error('Error fetching khoroo data:', error);
+        }
+      };
+      
+      fetchKhorooData();
+    } else {
+      // Reset khoroo data when no district is selected
+      setKhorooData({});
+    }
+  }, [selectedDistrict]);
   // Fetch district data from backend
   useEffect(() => {
     const fetchDistrictData = async () => {
@@ -88,8 +113,13 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
         const data = await response.json();
         
         if (data.success) {
-          setDistrictData(data.data);
-          console.log("District data fetched successfully in MapEdit:", data.data);
+          // Convert array to object with code as key for easier access
+          const districtsObject = {};
+          data.data.forEach(district => {
+            districtsObject[district.code] = district;
+          });
+          setDistrictData(districtsObject);
+          console.log("District data fetched successfully in MapEdit:", districtsObject);
         } else {
           console.error('Failed to fetch district data');
         }
@@ -151,13 +181,12 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
       onKhorooInfoChange(updatedInfo);
     }
   };
-  
-  const generateKhorooOptions = () => {
+    const generateKhorooOptions = () => {
     if (!selectedDistrict || !districtData[selectedDistrict]) return [];
     
-    const count = districtData[selectedDistrict].khorooCount;
+    const count = districtData[selectedDistrict].khorooCount || 0;
     return Array.from({ length: count }, (_, i) => i + 1);
-  };
+  };  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     console.log("Setting up KML from district/khoroo selection:", selectedDistrict, selectedKhoroo);
@@ -171,33 +200,59 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
           khoroo = sambar.khorooInfo.khoroo;
         }
         
-        if (!district || !khoroo) {
-          console.error("Could not extract district and khoroo information");
+        if (!district) {
+          const error = "Could not extract district information";
+          console.error(error);
+          setErrorMsg(error);
           setKmlVisible(false);
           return;
         }
         
         setKhorooNumber(khoroo);
         
-        const baseUrl = "https://datacenter.ublight.mn/images/kml/khoroo2021";
-        const url = `${baseUrl}/${district}-${khoroo}.kml`;
+        let url = null;
+        let error = null;
         
-        const timestamp = Date.now();
-        const fullUrl = `${url}?t=${timestamp}`;
-        setKmlUrl(fullUrl);
-        setKmlKey(timestamp);
-        setKmlVisible(true);
+        if (khoroo && khorooData[khoroo] && khorooData[khoroo].boundaries) {
+          // Use khoroo boundaries from database
+          url = khorooData[khoroo].boundaries;
+        } else if (khoroo) {
+          // Error - khoroo boundary not found in database
+          error = `No boundary data found for khoroo ${khoroo} in district ${district}`;
+        } else if (districtData[district] && districtData[district].boundaries) {
+          // Use district boundaries from database
+          url = districtData[district].boundaries;
+        } else {
+          // Error - district boundary not found in database
+          error = `No boundary data found for district ${district}`;
+        }
         
-        console.log("KML URL set:", fullUrl);
+        if (url) {
+          const timestamp = Date.now();
+          const fullUrl = `${url}?t=${timestamp}`;
+          setKmlUrl(fullUrl);
+          setKmlKey(timestamp);
+          setKmlVisible(true);
+          setErrorMsg(null);
+          
+          console.log("KML URL set:", fullUrl);
+        } else {
+          console.error(error);
+          setErrorMsg(error);
+          setKmlVisible(false);
+          setKmlUrl('');
+        }
       } catch (error) {
         console.error("Error setting KML URL:", error);
+        setErrorMsg(`Error: ${error.message || 'Unknown error occurred'}`);
         setKmlVisible(false);
       }
     } else {
       console.log("No district selected for KML");
       setKmlVisible(false);
+      setErrorMsg(null);
     }
-  }, [selectedDistrict, selectedKhoroo]);
+  }, [selectedDistrict, selectedKhoroo, districtData, khorooData, sambar]);
   
   // The rest of the original useEffect for sambar KML handling can be simplified now
   useEffect(() => {
@@ -265,6 +320,12 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
     }
   }, [sambar]);
   
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
+    libraries: ['geometry']
+  });
+
   useEffect(() => {
     if (selectedLocation && onLocationChange) {
       onLocationChange({
@@ -431,8 +492,7 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
               </select>
             </div>
           )}
-          
-          {kmlUrl && (
+            {kmlUrl && (
             <div style={{ 
               padding: '8px', 
               backgroundColor: '#e9ecef', 
@@ -441,6 +501,21 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
             }}>
               <p style={{ margin: '0' }}>
                 <strong>Current:</strong> {selectedDistrict} {selectedKhoroo ? `- ${selectedKhoroo} хороо` : ''}
+              </p>
+            </div>
+          )}
+          
+          {errorMsg && (
+            <div style={{ 
+              marginTop: '8px',
+              padding: '8px', 
+              backgroundColor: '#f8d7da', 
+              color: '#721c24',
+              borderRadius: '4px',
+              fontSize: '13px'
+            }}>
+              <p style={{ margin: '0' }}>
+                <strong>Error:</strong> {errorMsg}
               </p>
             </div>
           )}

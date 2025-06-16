@@ -4,22 +4,22 @@ const districtSchema = new mongoose.Schema({
     code: {
         type: String,
         required: true,
-        unique: true,
         trim: true
     },
+    
     name: {
         type: String,
         required: true,
         trim: true
     },
+    
     khorooCount: {
         type: Number,
         required: true,
-        min: 1
-    },
-    cyrillicCode: {
-        type: String,
-        trim: true
+        },
+    boundaries: {
+        type: String,  // KML path or URL
+        default: null
     },
     createdAt: {
         type: Date,
@@ -30,8 +30,5 @@ const districtSchema = new mongoose.Schema({
         default: Date.now
     }
 });
-
-// Create index on code for faster lookups
-districtSchema.index({ code: 1 });
 
 module.exports = mongoose.model('District', districtSchema);

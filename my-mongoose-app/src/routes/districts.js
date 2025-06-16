@@ -1,20 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const districtController = require('../controllers/districtController');
+const { Types } = require('mongoose');
 
-// Get all districts
+const validateObjectId = (req, res, next) => {
+    if (!Types.ObjectId.isValid(req.params.id)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Invalid district ID format'
+        });
+    }
+    next();
+};
+
+router.post('/', districtController.createDistrict);
 router.get('/', districtController.getAllDistricts);
-
-// Get district code map (Cyrillic to Latin)
-router.get('/map/codes', districtController.getDistrictCodeMap);
-
-// Get khoroos for a specific district
-router.get('/:districtCode/khoroos', districtController.getKhoroosByDistrict);
-
-// Get all sambars in a specific khoroo
-router.get('/:districtCode/khoroos/:khorooNumber/sambars', districtController.getSambarsByKhoroo);
-
-// Get specific district info - Must be after other specific routes to avoid conflicts
-router.get('/:code', districtController.getDistrictByCode);
+router.get('/:id', validateObjectId, districtController.getDistrictById);
+router.put('/:id', validateObjectId, districtController.updateDistrict);
+router.delete('/:id', validateObjectId, districtController.deleteDistrict);
 
 module.exports = router;

@@ -1,0 +1,26 @@
+const mongoose = require('mongoose');
+
+// Atlas connection string (kept for reference)
+const atlasUri = "mongodb+srv://test:test123@cluster0.agtvxla.mongodb.net/test?retryWrites=true&w=majority&appName=Cluster0";
+
+// Local MongoDB connection string - uncomment this for local development
+const localUri = "mongodb://localhost:27017/test";
+
+// Use this variable to switch between local and Atlas easily
+const uri = process.env.NODE_ENV === 'production' ? atlasUri : localUri;
+
+const connectToMongoDB = async () => {
+    try {
+        await mongoose.connect(uri, {
+            serverSelectionTimeoutMS: 30000, 
+            socketTimeoutMS: 45000,
+        });
+        console.log(`Connected to MongoDB (${process.env.NODE_ENV === 'production' ? 'Atlas' : 'Local'}) with Mongoose`);
+        return true;
+    } catch (error) {
+        console.error("Error connecting to MongoDB:", error);
+        throw error;
+    }
+};
+
+module.exports = connectToMongoDB;
