@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { GoogleMap, KmlLayer, Marker } from '@react-google-maps/api';
 import { useJsApiLoader } from '@react-google-maps/api';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
@@ -65,12 +65,11 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
   });
-  
-  const handleMapClick = (event) => {
+    const handleMapClick = useCallback((event) => {
     console.log("Map clicked, but ignoring - only KML clicks allowed");
-  };
+  }, []);
   
-  const handleKmlClick = (event) => {
+  const handleKmlClick = useCallback((event) => {
     if (event && event.featureData) {
       console.log("KML feature clicked:", event.featureData);
       
@@ -80,30 +79,31 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
         console.log("New marker position set from KML click");
       }
     }
-  };
-  
+  }, [districtKhoroo]);
+    // Use a memoized callback for map load to prevent unnecessary re-renders
+  const handleMapLoad = useCallback(map => {
+    mapRef.current = map;
+    console.log("Map loaded");
+    
+    if (selectedLocation) {
+      map.panTo({
+        lat: parseFloat(selectedLocation.lat),
+        lng: parseFloat(selectedLocation.lng)
+      });
+    }
+  }, [selectedLocation]);
+
   if (!isLoaded) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>Loading Maps...</div>;
   }
   
   return (
-    <div className="map-edit-container" style={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
-      <GoogleMap
+    <div className="map-edit-container" style={{ position: 'relative', width: '100%', marginBottom: '20px' }}>      <GoogleMap
         mapContainerStyle={containerStyle}
         center={initialCenter} 
         zoom={15}
         onClick={handleMapClick}
-        onLoad={map => {
-          mapRef.current = map;
-          console.log("Map loaded");
-          
-          if (selectedLocation) {
-            map.panTo({
-              lat: parseFloat(selectedLocation.lat),
-              lng: parseFloat(selectedLocation.lng)
-            });
-          }
-        }}
+        onLoad={handleMapLoad}
         options={{
           zoomControl: true,
           streetViewControl: false,
@@ -144,9 +144,10 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
             onLoad={(kmlLayer) => {
               console.log("KML Layer loaded successfully:", kmlUrl);
               kmlLayerRef.current = kmlLayer;
-              
-              // Add click handler to KML layer
+                // Add click handler to KML layer
               if (kmlLayer) {
+                // Clear existing click listeners to prevent duplicates
+                google.maps.event.clearListeners(kmlLayer, 'click');
                 google.maps.event.addListener(kmlLayer, 'click', handleKmlClick);
                 console.log("KML click handler attached");
               }
@@ -286,4 +287,4 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
   );
 };
 
-export default MapEdit;
+export default React.memo(MapEdit);

@@ -399,3 +399,88 @@ label {
   margin-bottom: 5px;
   font-weight: 500;
 }
+
+/* Confirmation modal */
+.confirm-delete-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.confirm-delete-modal p {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    max-width: 400px;
+    text-align: center;
+}
+
+.confirm-delete-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.confirm-delete-button {
+    padding: 0.5rem 1rem;
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.cancel-delete-button {
+    padding: 0.5rem 1rem;
+    background-color: #718096;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* Search Form Styles */
+.search-form {
+  margin-bottom: 1.5rem;
+}
+
+.search-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.search-input-group {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.search-button {
+  padding: 0.5rem 1rem;
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.clear-button {
+  padding: 0.5rem 1rem;
+  background-color: #718096;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}

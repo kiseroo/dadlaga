@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import MapEdit from './MapEdit';
 
 const LocationEditModal = ({ 
@@ -9,13 +9,58 @@ const LocationEditModal = ({
   onKhorooInfoChange, 
   onUpdate 
 }) => {
-  if (!isOpen || !sambar) return null;
+  const [localSambar, setLocalSambar] = useState(null);
+  
+  // When the sambar prop changes, update our local state
+  useEffect(() => {
+    if (sambar) {
+      setLocalSambar(sambar);
+    }
+  }, [sambar]);
+  
+  // Track changes to the sambar through our callback handlers
+  useEffect(() => {
+    if (localSambar && sambar) {
+      // If coordinates or khorooInfo has been updated, ensure our local state reflects this
+      if (
+        localSambar.coordinates?.lat !== sambar.coordinates?.lat ||
+        localSambar.coordinates?.lng !== sambar.coordinates?.lng ||
+        JSON.stringify(localSambar.khorooInfo) !== JSON.stringify(sambar.khorooInfo)
+      ) {
+        setLocalSambar(sambar);
+      }
+    }
+  }, [sambar]);
+
+  if (!isOpen || !localSambar) return null;
+  
+  const handleLocalLocationChange = (newLocation) => {
+    // Update our local state
+    setLocalSambar({
+      ...localSambar,
+      coordinates: newLocation
+    });
+    
+    // Call the parent's handler
+    onLocationChange(newLocation);
+  };
+  
+  const handleLocalKhorooInfoChange = (newKhorooInfo) => {
+    // Update our local state
+    setLocalSambar({
+      ...localSambar,
+      khorooInfo: newKhorooInfo
+    });
+    
+    // Call the parent's handler
+    onKhorooInfoChange(newKhorooInfo);
+  };
   
   return (
     <div className="map-modal-overlay">
       <div className="map-modal-content">
         <div className="map-modal-header">
-          <h3>Edit Location: {sambar.name}</h3>
+          <h3>Edit Location: {localSambar.name}</h3>
           <button 
             className="close-modal-button"
             onClick={onClose}
@@ -25,10 +70,10 @@ const LocationEditModal = ({
         </div>
         <div className="map-modal-body">
           <MapEdit
-            initialLocation={sambar.coordinates}
-            onLocationChange={onLocationChange}
-            sambar={sambar}
-            onKhorooInfoChange={onKhorooInfoChange}
+            initialLocation={localSambar.coordinates}
+            onLocationChange={handleLocalLocationChange}
+            sambar={localSambar}
+            onKhorooInfoChange={handleLocalKhorooInfoChange}
           />
           <div className="map-modal-actions">
             <button 
@@ -39,7 +84,7 @@ const LocationEditModal = ({
             </button>
             <button 
               className="update-button"
-              onClick={() => onUpdate(sambar)}
+              onClick={() => onUpdate(localSambar)}
             >
               Update Location
             </button>
