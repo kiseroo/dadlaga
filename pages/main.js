@@ -335,68 +335,7 @@ export default function Main() {
                     <KhorooSambarsPanel />
                 </div>
 
-                <div className="content-card">
-                    <h2>{editingSambar ? 'Edit Location' : 'Location List'}</h2>
-                    {editingSambar && (
-                        <form onSubmit={handleUpdateSambar} className="user-form">
-                            <input
-                                type="text"
-                                name="name"
-                                placeholder="Location Name"
-                                required
-                                className="input-field"
-                                value={sambarFormData.name}
-                                onChange={handleSambarInputChange}
-                            />                              <div className="map-edit-wrapper">                                <MapEdit 
-                                    key={`edit-map-${editingSambar._id}`}
-                                    initialLocation={{
-                                        lat: parseFloat(sambarFormData.coordinates.lat),
-                                        lng: parseFloat(sambarFormData.coordinates.lng)
-                                    }}
-                                    sambar={editingSambar}
-                                    onLocationChange={(newLocation) => {
-                                        setSambarFormData(prev => ({
-                                            ...prev,
-                                            coordinates: {
-                                                lat: newLocation.lat,
-                                                lng: newLocation.lng
-                                            }
-                                        }));
-                                    }}
-                                    onKhorooInfoChange={(updatedKhorooInfo) => {
-                                        // Store the updated district and khoroo info
-                                        console.log("KhorooInfo updated:", updatedKhorooInfo);
-                                        // This will be accessible in handleUpdateSambar
-                                        if (!sambarFormData.khorooInfo) {
-                                            setSambarFormData(prev => ({
-                                                ...prev,
-                                                khorooInfo: updatedKhorooInfo
-                                            }));
-                                        } else {
-                                            setSambarFormData(prev => ({
-                                                ...prev,
-                                                khorooInfo: {
-                                                    ...prev.khorooInfo,
-                                                    district: updatedKhorooInfo.district,
-                                                    khoroo: updatedKhorooInfo.khoroo
-                                                }
-                                            }));
-                                        }
-                                    }}
-                                />
-                            </div>                              {/* test */}
-                            <div className="button-container">
-                                <button type="button" onClick={handleCancelSambarEdit} className="cancel-button">
-                                    Cancel
-                                </button>
-                                <button type="submit" className="submit-button">
-                                    Update Location
-                                </button>
-                            </div>
-                        </form>
-                    )}
                 </div>
-            </div>
         );
     };    const handleEditSambar = (sambar) => {
         setEditingSambar(sambar);
