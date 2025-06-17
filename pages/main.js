@@ -396,49 +396,6 @@ export default function Main() {
                         </form>
                     )}
                 </div>
-                
-                <div className="content-card">
-                    <h2>Saved Locations</h2>
-                    {sambars.length === 0 ? (
-                        <p>No locations found.</p>
-                    ) : (
-                        <table className="user-list">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Latitude</th>
-                                    <th>Longitude</th>
-                                    <th>Created At</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {sambars.map(sambar => (
-                                    <tr key={sambar._id}>
-                                        <td>{sambar.name}</td>
-                                        <td>{sambar.coordinates?.lat}</td>
-                                        <td>{sambar.coordinates?.lng}</td>
-                                        <td>{new Date(sambar.createdAt).toLocaleDateString()}</td>
-                                        <td className="user-actions">
-                                            <button 
-                                                onClick={() => handleEditSambar(sambar)}
-                                                className="edit-button"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteSambar(sambar._id)}
-                                                className="delete-button"
-                                            >
-                                                Delete
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
             </div>
         );
     };    const handleEditSambar = (sambar) => {
