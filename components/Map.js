@@ -23,8 +23,237 @@ function Map() {
   
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
-  const markerClustererRef = useRef(null);
   const markersRef = useRef([]);
+  const overlaysRef = useRef([]);  // Custom clustering function for HTML markers
+  const clusterMarkers = (locations, zoom) => {
+    if (zoom >= 15) return locations.map(loc => ({ ...loc, isCluster: false, count: 1 }));
+    
+    const clusters = [];
+    const processed = new Set();
+    const gridSize = 60; // pixels
+    
+    locations.forEach((location, index) => {
+      if (processed.has(index)) return;
+      
+      const cluster = {
+        ...location,
+        isCluster: false,
+        count: 1,
+        items: [location]
+      };
+      
+      // Find nearby locations to cluster
+      locations.forEach((otherLocation, otherIndex) => {
+        if (otherIndex === index || processed.has(otherIndex)) return;
+        
+        const distance = getPixelDistance(
+          location.coordinates,
+          otherLocation.coordinates,
+          zoom
+        );
+        
+        if (distance < gridSize) {
+          cluster.items.push(otherLocation);
+          cluster.count++;
+          processed.add(otherIndex);
+        }
+      });
+      
+      if (cluster.count > 1) {
+        cluster.isCluster = true;
+        // Use center point of cluster
+        const avgLat = cluster.items.reduce((sum, item) => sum + item.coordinates.lat, 0) / cluster.items.length;
+        const avgLng = cluster.items.reduce((sum, item) => sum + item.coordinates.lng, 0) / cluster.items.length;
+        cluster.coordinates = { lat: avgLat, lng: avgLng };
+      }
+      
+      clusters.push(cluster);
+      processed.add(index);
+    });
+    
+    return clusters;
+  };
+  
+  // Calculate pixel distance between two coordinates
+  const getPixelDistance = (coord1, coord2, zoom) => {
+    const WORLD_WIDTH = 256;
+    const pixelsPerLngDegree = WORLD_WIDTH / 360;
+    const pixelsPerLngRadian = WORLD_WIDTH / (2 * Math.PI);
+    
+    const scale = 1 << zoom;
+    
+    const x1 = coord1.lng * pixelsPerLngDegree * scale;
+    const x2 = coord2.lng * pixelsPerLngDegree * scale;
+    
+    const lat1Rad = coord1.lat * Math.PI / 180;
+    const lat2Rad = coord2.lat * Math.PI / 180;
+    
+    const y1 = (WORLD_WIDTH / 2 - Math.log(Math.tan(Math.PI / 4 + lat1Rad / 2)) * pixelsPerLngRadian) * scale;
+    const y2 = (WORLD_WIDTH / 2 - Math.log(Math.tan(Math.PI / 4 + lat2Rad / 2)) * pixelsPerLngRadian) * scale;
+    
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+  };
+
+  // Helper function to create custom HTML marker element with your image
+  const createCustomMarkerElement = (location, isCluster = false) => {
+    const markerElement = document.createElement('div');
+    markerElement.className = 'advanced-marker';
+      if (isCluster) {
+      const clusterClass = location.count < 10 ? 'small' : 
+                          location.count < 100 ? 'medium' : 'large';
+      
+      markerElement.innerHTML = `
+        <div class="marker-container cluster">
+          <div class="cluster-marker ${clusterClass}">
+            <span class="cluster-count">${location.count}</span>
+          </div>
+          <div class="marker-label">${location.count} locations</div>
+        </div>
+      `;
+    } else {
+      markerElement.innerHTML = `
+        <div class="marker-container">
+          <img src="https://s.hdnux.com/photos/12/10/21/2655298/7/ratio2x3_1920.jpg" 
+               alt="${location.name}" 
+               class="marker-image" />
+          <div class="marker-label">${location.name}</div>
+        </div>
+      `;
+    }
+    
+    // Add CSS styles
+    const style = document.createElement('style');
+    if (!document.head.querySelector('#advanced-marker-styles')) {
+      style.id = 'advanced-marker-styles';
+      style.textContent = `
+        .advanced-marker {
+          position: relative;
+          cursor: pointer;
+        }
+        
+        .marker-container {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transform: translate(-50%, -100%);
+        }
+        
+        .marker-image {
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          border: 3px solid #ffffff;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+          transition: all 0.3s ease;
+          object-fit: cover;
+          background: white;
+        }
+        
+        .marker-image:hover {
+          transform: scale(1.2);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+          border-color: #007bff;
+        }          .cluster-marker {
+          border-radius: 50%;
+          border: 4px solid #ffffff;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+          position: relative;
+          cursor: pointer;
+        }
+        
+        /* Small clusters (2-9 markers) - Blue like Google Maps */
+        .cluster-marker.small {
+          width: 56px;
+          height: 56px;
+          background: linear-gradient(135deg, #4285f4, #1a73e8);
+        }
+        
+        /* Medium clusters (10-99 markers) - Orange */
+        .cluster-marker.medium {
+          width: 66px;
+          height: 66px;
+          background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+        
+        /* Large clusters (100+ markers) - Red */
+        .cluster-marker.large {
+          width: 76px;
+          height: 76px;
+          background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .cluster-marker:hover {
+          transform: scale(1.2);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+          border-width: 5px;
+        }
+        
+        .cluster-count {
+          color: white;
+          font-weight: bold;
+          font-family: 'Roboto', Arial, sans-serif;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          line-height: 1;
+        }
+        
+        /* Font sizes based on cluster size */
+        .cluster-marker.small .cluster-count {
+          font-size: 18px;
+        }
+        
+        .cluster-marker.medium .cluster-count {
+          font-size: 20px;
+        }
+        
+        .cluster-marker.large .cluster-count {
+          font-size: 22px;
+        }
+        
+        .marker-label {
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgba(0,0,0,0.8);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 12px;
+          white-space: nowrap;
+          margin-top: 8px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+          pointer-events: none;
+          font-family: Arial, sans-serif;
+          font-weight: 500;
+        }
+        
+        .advanced-marker:hover .marker-label {
+          opacity: 1;
+        }
+          .marker-label::before {
+          content: '';
+          position: absolute;
+          top: -4px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0;
+          height: 0;
+          border-left: 4px solid transparent;
+          border-right: 4px solid transparent;
+          border-bottom: 4px solid rgba(0,0,0,0.8);
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    return markerElement;
+  };
   
   const {
     districtData,
@@ -39,8 +268,7 @@ function Map() {
     handleKmlClick,
     generateKhorooOptions,
     prepareSavedKhorooInfo
-  } = useDistrictKhoroo();
-  const { isLoaded } = useJsApiLoader({
+  } = useDistrictKhoroo();  const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
@@ -60,49 +288,91 @@ function Map() {
     };
     
     fetchSavedLocations();
-  }, []);
-  // marker clustering
+  }, []);  // Custom clustering with HTML markers
   useEffect(() => {
+    console.log('Marker effect triggered:', { 
+      mapReady: !!mapRef.current, 
+      isLoaded, 
+      savedLocationsCount: savedLocations.length
+    });
+    
     if (!mapRef.current || !isLoaded || savedLocations.length === 0) return;
 
-    if (markerClustererRef.current) {
-      markerClustererRef.current.clearMarkers();
-    }
-    markersRef.current.forEach(marker => marker.setMap(null));
-    markersRef.current = [];
+    // Clear existing overlays
+    overlaysRef.current.forEach(overlay => overlay.setMap(null));
+    overlaysRef.current = [];
 
-    const markers = savedLocations.map(location => {
-      const marker = new google.maps.Marker({
-        position: {
-          lat: location.coordinates.lat,
-          lng: location.coordinates.lng
-        },
-        icon: {
-          url: 'https://s.hdnux.com/photos/12/10/21/2655298/7/ratio2x3_1920.jpg',
-          scaledSize: new google.maps.Size(30, 30),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(15, 30)
-        },
-        title: location.name,
-        map: null 
+    const handleZoomChange = () => {
+      const zoom = mapRef.current.getZoom();
+      updateMarkers(zoom);
+    };
+
+    const updateMarkers = (zoom) => {
+      // Clear existing overlays
+      overlaysRef.current.forEach(overlay => overlay.setMap(null));
+      overlaysRef.current = [];
+
+      // Get clustered markers based on zoom level
+      const clusteredLocations = clusterMarkers(savedLocations, zoom);
+
+      // Create HTML overlays for each marker/cluster
+      clusteredLocations.forEach(location => {
+        const markerElement = createCustomMarkerElement(location, location.isCluster);
+        
+        // Create overlay
+        const overlay = new google.maps.OverlayView();
+        
+        overlay.onAdd = function() {
+          const layer = this.getPanes().overlayMouseTarget;
+          layer.appendChild(markerElement);
+          
+          markerElement.style.position = 'absolute';
+          markerElement.style.cursor = 'pointer';
+          
+          // Add click handler
+          markerElement.addEventListener('click', () => {
+            if (location.isCluster) {
+              // Zoom in when cluster is clicked
+              mapRef.current.setZoom(mapRef.current.getZoom() + 2);
+              mapRef.current.setCenter(location.coordinates);
+              console.log(`Cluster clicked: ${location.count} locations`);
+            } else {
+              console.log('Marker clicked:', location.name);
+            }
+          });
+        };
+        
+        overlay.draw = function() {
+          const projection = this.getProjection();
+          const position = projection.fromLatLngToDivPixel(
+            new google.maps.LatLng(location.coordinates.lat, location.coordinates.lng)
+          );
+          markerElement.style.left = position.x + 'px';
+          markerElement.style.top = position.y + 'px';
+        };
+        
+        overlay.onRemove = function() {
+          if (markerElement.parentNode) {
+            markerElement.parentNode.removeChild(markerElement);
+          }
+        };
+        
+        overlay.setMap(mapRef.current);
+        overlaysRef.current.push(overlay);
       });
-      
-      return marker;
-    });
+    };
 
-    markersRef.current = markers;    
-    markerClustererRef.current = new MarkerClusterer({
-      map: mapRef.current,
-      markers: markers,
-      gridSize: 60,
-      maxZoom: 15 
-    });
+    // Initial marker creation
+    updateMarkers(mapRef.current.getZoom());
+
+    // Listen for zoom changes to re-cluster
+    const zoomListener = mapRef.current.addListener('zoom_changed', handleZoomChange);
 
     return () => {
-      if (markerClustererRef.current) {
-        markerClustererRef.current.clearMarkers();
-      }
-      markersRef.current.forEach(marker => marker.setMap(null));
+      // Cleanup
+      google.maps.event.removeListener(zoomListener);
+      overlaysRef.current.forEach(overlay => overlay.setMap(null));
+      overlaysRef.current = [];
     };
   }, [savedLocations, isLoaded]);
 
@@ -201,7 +471,7 @@ function Map() {
           />
         )}
         
-        {/* Markers are now handled by the clusterer in useEffect */}
+        {/* marker clusterer useEffect */}
         
         {kmlUrl && (
           <KmlLayer 
@@ -222,8 +492,7 @@ function Map() {
         )}
       </GoogleMap>
       
-      {/* overlay */}
-      <div style={{
+      {/* overlay */}      <div style={{
         position: 'absolute',
         top: '10px',
         left: '10px',

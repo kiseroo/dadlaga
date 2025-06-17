@@ -11,7 +11,6 @@ const LocationEditModal = ({
 }) => {
   const [localSambar, setLocalSambar] = useState(null);
   
-  // When the sambar prop changes, update our local state
   useEffect(() => {
     if (sambar) {
       setLocalSambar(sambar);
