@@ -9,6 +9,7 @@
     "mongoose-server": "node my-mongoose-app/src/app.js"
   },
   "dependencies": {
+    "@googlemaps/markerclusterer": "^2.5.3",
     "@react-google-maps/api": "^2.20.6",
     "cors": "^2.8.5",
     "express": "^4.18.2",

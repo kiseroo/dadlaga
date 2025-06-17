@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, KmlLayer } from '@react-google-maps/api';
+import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 
 const containerStyle = {
@@ -22,6 +23,8 @@ function Map() {
   
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
+  const markerClustererRef = useRef(null);
+  const markersRef = useRef([]);
   
   const {
     districtData,
@@ -37,13 +40,11 @@ function Map() {
     generateKhorooOptions,
     prepareSavedKhorooInfo
   } = useDistrictKhoroo();
-  
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
   });
-
   useEffect(() => {
     const fetchSavedLocations = async () => {
       try {
@@ -60,6 +61,50 @@ function Map() {
     
     fetchSavedLocations();
   }, []);
+  // marker clustering
+  useEffect(() => {
+    if (!mapRef.current || !isLoaded || savedLocations.length === 0) return;
+
+    if (markerClustererRef.current) {
+      markerClustererRef.current.clearMarkers();
+    }
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
+
+    const markers = savedLocations.map(location => {
+      const marker = new google.maps.Marker({
+        position: {
+          lat: location.coordinates.lat,
+          lng: location.coordinates.lng
+        },
+        icon: {
+          url: 'https://s.hdnux.com/photos/12/10/21/2655298/7/ratio2x3_1920.jpg',
+          scaledSize: new google.maps.Size(30, 30),
+          origin: new google.maps.Point(0, 0),
+          anchor: new google.maps.Point(15, 30)
+        },
+        title: location.name,
+        map: null 
+      });
+      
+      return marker;
+    });
+
+    markersRef.current = markers;    
+    markerClustererRef.current = new MarkerClusterer({
+      map: mapRef.current,
+      markers: markers,
+      gridSize: 60,
+      maxZoom: 15 
+    });
+
+    return () => {
+      if (markerClustererRef.current) {
+        markerClustererRef.current.clearMarkers();
+      }
+      markersRef.current.forEach(marker => marker.setMap(null));
+    };
+  }, [savedLocations, isLoaded]);
 
   const handleMapClick = (event) => {
     if (!kmlUrl) {
@@ -135,13 +180,11 @@ function Map() {
   };
 
   return isLoaded ? (
-    <div className="map-container" style={{ position: 'relative', width: '100%', height: '80vh' }}>
-      <GoogleMap
+    <div className="map-container" style={{ position: 'relative', width: '100%', height: '80vh' }}>      <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}
         zoom={10}
-        onClick={handleMapClick}
-        onLoad={map => {
+        onClick={handleMapClick}        onLoad={map => {
           mapRef.current = map;
         }}
         options={{
@@ -150,8 +193,7 @@ function Map() {
           streetViewControl: false,
           mapTypeControl: true
         }}
-      >
-        {/* Show current selected loc */}
+      >        {/* Show current selected loc */}
         {selectedLocation && (
           <Marker 
             position={selectedLocation}
@@ -159,25 +201,7 @@ function Map() {
           />
         )}
         
-        {/* ulaan loc save */}
-        {savedLocations.map(location => (
-          <Marker 
-            key={location._id}
-            position={{
-              lat: location.coordinates.lat,
-              lng: location.coordinates.lng
-            }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              fillColor: '#FF0000',
-              fillOpacity: 0.8,
-              strokeColor: '#FF0000',
-              strokeWeight: 2,
-              scale: 8
-            }}
-            title={location.name}
-          />
-        ))}
+        {/* Markers are now handled by the clusterer in useEffect */}
         
         {kmlUrl && (
           <KmlLayer 
