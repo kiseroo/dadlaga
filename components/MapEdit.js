@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleMap, Marker, KmlLayer } from '@react-google-maps/api';
+import { GoogleMap, KmlLayer, Marker } from '@react-google-maps/api';
 import { useJsApiLoader } from '@react-google-maps/api';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 
@@ -60,7 +60,6 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
       setKhorooNumber(selectedKhoroo);
     }
   }, [selectedKhoroo]);
-  
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
@@ -112,15 +111,22 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
           fullscreenControl: true,
           gestureHandling: 'greedy' 
         }}
-      >
-        {/* Marker */}
+      >        {/* Custom Styled Marker */}
         {selectedLocation && (
           <Marker
-            key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`} 
-            position={selectedLocation}
-            draggable={false} // Disable dragging since we want to restrict to KML clicks only
+            key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`}
+            position={{
+              lat: parseFloat(selectedLocation.lat),
+              lng: parseFloat(selectedLocation.lng)
+            }}
+            title={sambar?.name || "Selected Location"}
             onLoad={(marker) => {
               markerRef.current = marker;
+            }}            icon={{
+              url: 'https://fastly.picsum.photos/id/237/200/300.jpg?hmac=TmmQSbShHz9CdQm0NkEjx1Dyh_Y984R9LpNrpvH2D_U',
+              scaledSize: new google.maps.Size(40, 40), 
+              origin: new google.maps.Point(0, 0),
+              anchor: new google.maps.Point(20, 20) 
             }}
           />
         )}

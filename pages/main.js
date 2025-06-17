@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
+const LocationEditModal = dynamic(
+  () => import('../components/LocationEditModal'),
+  { ssr: false }
+);
+
 const Map = dynamic(
   () => import('../components/Map').then(mod => mod.default),
   { ssr: false }
@@ -447,6 +452,58 @@ export default function Main() {
             },
             khorooInfo: sambar.khorooInfo ? { ...sambar.khorooInfo } : null
         });
+
+        // Show modal for editing
+        setIsMapModalOpen(true);
+    };
+    
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+    
+    const closeMapModal = () => {
+        setIsMapModalOpen(false);
+    };
+    
+    const handleLocationChange = (newLocation) => {
+        setSambarFormData(prev => ({
+            ...prev,
+            coordinates: newLocation
+        }));
+    };
+    
+    const handleKhorooInfoChange = (newKhorooInfo) => {
+        setSambarFormData(prev => ({
+            ...prev,
+            khorooInfo: newKhorooInfo
+        }));
+    };
+    
+    const handleUpdateLocationFromModal = async (sambar) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/sambar/${sambar._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    coordinates: sambarFormData.coordinates,
+                    khorooInfo: sambarFormData.khorooInfo
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update the local data
+                setSambars(sambars.map(s => s._id === sambar._id ? { ...s, ...data.data } : s));
+                alert('Location updated successfully!');
+                closeMapModal();
+            } else {
+                setError(data.message || 'Failed to update location');
+            }
+        } catch (error) {
+            console.error('Error updating location:', error);
+            setError('Error updating location. Please try again.');
+        }
     };
 
     const handleCancelSambarEdit = () => {

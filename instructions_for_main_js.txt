@@ -1,0 +1,91 @@
+Add this to your main.js file, before the return statement at the end of the file:
+
+```javascript
+{/* Location Edit Modal */}
+<LocationEditModal
+    isOpen={isMapModalOpen}
+    sambar={editingSambar}
+    onClose={closeMapModal}
+    onLocationChange={handleLocationChange}
+    onKhorooInfoChange={handleKhorooInfoChange}
+    onUpdate={handleUpdateLocationFromModal}
+/>
+```
+
+And replace the handleEditSambar function with this code:
+
+```javascript
+const handleEditSambar = (sambar) => {
+    setEditingSambar(sambar);
+    
+    setSambarFormData({
+        name: sambar.name,
+        coordinates: {
+            lat: parseFloat(sambar.coordinates.lat),
+            lng: parseFloat(sambar.coordinates.lng)
+        },
+        khorooInfo: sambar.khorooInfo ? { ...sambar.khorooInfo } : null
+    });
+
+    // Show modal for editing
+    setIsMapModalOpen(true);
+};
+
+const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+
+const closeMapModal = () => {
+    setIsMapModalOpen(false);
+};
+
+const handleLocationChange = (newLocation) => {
+    setSambarFormData(prev => ({
+        ...prev,
+        coordinates: newLocation
+    }));
+};
+
+const handleKhorooInfoChange = (newKhorooInfo) => {
+    setSambarFormData(prev => ({
+        ...prev,
+        khorooInfo: newKhorooInfo
+    }));
+};
+
+const handleUpdateLocationFromModal = async (sambar) => {
+    try {
+        const response = await fetch(`http://localhost:3001/api/sambar/${sambar._id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                coordinates: sambarFormData.coordinates,
+                khorooInfo: sambarFormData.khorooInfo
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update the local data
+            setSambars(sambars.map(s => s._id === sambar._id ? { ...s, ...data.data } : s));
+            alert('Location updated successfully!');
+            closeMapModal();
+        } else {
+            setError(data.message || 'Failed to update location');
+        }
+    } catch (error) {
+        console.error('Error updating location:', error);
+        setError('Error updating location. Please try again.');
+    }
+}
+```
+
+Also add this import at the top of your file:
+
+```javascript
+const LocationEditModal = dynamic(
+  () => import('../components/LocationEditModal'),
+  { ssr: false }
+);
+```

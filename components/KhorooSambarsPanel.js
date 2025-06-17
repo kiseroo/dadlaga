@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import LocationEditModal from './LocationEditModal';
 
 
-const KhorooSambarsPanel = () => {  const [districts, setDistricts] = useState({});
+const KhorooSambarsPanel = () => {
+  const [districts, setDistricts] = useState({});
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [khoroos, setKhoroos] = useState([]);
   const [selectedKhoroo, setSelectedKhoroo] = useState('all');
   const [sambars, setSambars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [currentSambar, setCurrentSambar] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -143,16 +147,69 @@ const KhorooSambarsPanel = () => {  const [districts, setDistricts] = useState({
       
       fetchSambarsByKhoroo();
     }
-  }, [selectedKhoroo, selectedDistrict]);
-  const handleViewOnMap = (sambar) => {
-    const currentQuery = { ...router.query, sambarId: sambar._id };
-    
-    router.push({
-      pathname: router.pathname,
-      query: currentQuery
-    }, undefined, { shallow: true });
-    
-   
+  }, [selectedKhoroo, selectedDistrict]);  const handleViewOnMap = (sambar) => {
+    setCurrentSambar(sambar);
+    setIsMapModalOpen(true);
+  };
+  
+  const closeMapModal = () => {
+    setIsMapModalOpen(false);
+    setCurrentSambar(null);
+  };
+    const handleLocationChange = (newLocation) => {
+    // Store the updated location temporarily
+    console.log("Location updated:", newLocation);
+    if (currentSambar) {
+      setCurrentSambar({
+        ...currentSambar,
+        coordinates: newLocation
+      });
+    }
+  };
+  
+  const handleKhorooInfoChange = (newKhorooInfo) => {
+    // Store the updated khoroo info temporarily
+    console.log("Khoroo info updated:", newKhorooInfo);
+    if (currentSambar) {
+      setCurrentSambar({
+        ...currentSambar,
+        khorooInfo: newKhorooInfo
+      });
+    }
+  };
+
+  const handleUpdateLocation = async (sambar) => {
+    try {
+      setLoading(true);
+      // Call the API to update the location
+      const response = await fetch(`http://localhost:3001/api/sambar/${sambar._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          coordinates: sambar.coordinates,
+          khorooInfo: sambar.khorooInfo
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the sambar in the local state
+        setSambars(sambars.map(s => s._id === sambar._id ? {...s, ...data.data} : s));
+        setError('');
+        alert('Location updated successfully!');
+        closeMapModal();
+      } else {
+        setError(data.message || 'Failed to update location');
+      }
+    } catch (error) {
+      console.error('Error updating location:', error);
+      setError('Error updating location. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };return (
     <div className="khoroo-search-container">
       <div className="form-group">
@@ -227,7 +284,7 @@ const KhorooSambarsPanel = () => {  const [districts, setDistricts] = useState({
                       className="view-button"
                       onClick={() => handleViewOnMap(sambar)}
                     >
-                      View
+                      Edit
                     </button>
                   </td>
                 </tr>
@@ -235,7 +292,16 @@ const KhorooSambarsPanel = () => {  const [districts, setDistricts] = useState({
             </tbody>
           </table>
         </div>
-      )}
+      )}      
+      {/* Using the LocationEditModal component */}
+      <LocationEditModal
+        isOpen={isMapModalOpen}
+        sambar={currentSambar}
+        onClose={closeMapModal}
+        onLocationChange={handleLocationChange}
+        onKhorooInfoChange={handleKhorooInfoChange}
+        onUpdate={handleUpdateLocation}
+      />
     </div>
   );
 };
