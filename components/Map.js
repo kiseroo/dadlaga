@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, KmlLayer } from '@react-google-maps/api';
+import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 
 const containerStyle = {
   width: '100%', 
@@ -13,21 +14,29 @@ const center = {
 };
 
 function Map() {
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationName, setLocationName] = useState('');
   const [saveStatus, setSaveStatus] = useState({ message: '', isError: false });
-  const [districtData, setDistrictData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [savedLocations, setSavedLocations] = useState([]);
+  
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
   
-  
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [selectedKhoroo, setSelectedKhoroo] = useState('');
-  const [kmlUrl, setKmlUrl] = useState('');
-  const [kmlLoading, setKmlLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [khorooInfo, setKhorooInfo] = useState(null);
+  const {
+    districtData,
+    selectedDistrict,
+    selectedKhoroo,
+    khorooInfo,
+    selectedLocation,
+    kmlUrl,
+    kmlLoading,
+    handleDistrictChange,
+    handleKhorooChange,
+    handleKmlClick,
+    generateKhorooOptions,
+    prepareSavedKhorooInfo
+  } = useDistrictKhoroo();
   
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -35,62 +44,31 @@ function Map() {
     libraries: ['geometry']
   });
 
-  // Fetch district data from backend
   useEffect(() => {
-    const fetchDistrictData = async () => {
+    const fetchSavedLocations = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/districts');
+        const response = await fetch('http://localhost:3001/api/sambar');
         const data = await response.json();
         
         if (data.success) {
-          setDistrictData(data.data);
-          console.log("District data fetched successfully:", data.data);
-        } else {
-          console.error('Failed to fetch district data');
+          setSavedLocations(data.data || []);
         }
       } catch (error) {
-        console.error('Error fetching district data:', error);
+        console.error('Error fetching saved locations:', error);
       }
     };
     
-    fetchDistrictData();
+    fetchSavedLocations();
   }, []);
 
-  
-  useEffect(() => {
-    if (selectedDistrict) {
-      setKmlLoading(true);
-      
-      let url;
-      if (selectedKhoroo) {
-        
-        url = `https://datacenter.ublight.mn/images/kml/khoroo2021/${selectedDistrict}-${selectedKhoroo}.kml`;
-      } else {
-        
-        url = `https://datacenter.ublight.mn/images/kml/khoroo2021/${selectedDistrict}.kml`;
-      }
-      
-      setKmlUrl(url);
-      setKmlLoading(false);
-      
-      setSelectedLocation(null);
-      setKhorooInfo(null);
-    } else {
-      setKmlUrl('');
-      setSelectedLocation(null);
-      setKhorooInfo(null);
-    }
-  }, [selectedDistrict, selectedKhoroo]);
-
   const handleMapClick = (event) => {
-    
     if (!kmlUrl) {
       setErrorMessage("Please select a district first");
       setTimeout(() => setErrorMessage(""), 3000);
       return;
     }
-    
   };
+  
   const handleSaveLocation = async () => {
     if (!selectedLocation || !locationName.trim()) {
       setSaveStatus({
@@ -104,50 +82,18 @@ function Map() {
     setSaveStatus({ message: '', isError: false });
     
     try {      
-      let savedKhorooInfo = { ...khorooInfo } || {};
+      const savedKhorooInfo = prepareSavedKhorooInfo(locationName);
       
-      const district = selectedDistrict.toLowerCase();
-      
-      let khoroo = selectedKhoroo;
-      
-      if (!khoroo && khorooInfo && khorooInfo.khoroo) {
-        khoroo = khorooInfo.khoroo;
-      }
-      
-      if (district && khoroo) {
-        if (khoroo !== "All") {
-          const khorooNumber = parseInt(khoroo, 10);
-          const formattedKhoroo = khorooNumber < 10 ? `${khorooNumber}` : `${khorooNumber}`;
-          
-          savedKhorooInfo = {
-            name: savedKhorooInfo.name || `${district.toUpperCase()}_${formattedKhoroo}`,
-            district: district,
-            khoroo: formattedKhoroo
-          };
-          
-          console.log(`Saving location with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
-        } else {
-          const match = locationName.match(/\d+/);
-          if (match) {
-            const extractedKhoroo = match[0];
-            savedKhorooInfo = {
-              name: savedKhorooInfo.name || `${district.toUpperCase()}_${extractedKhoroo}`,
-              district: district,
-              khoroo: extractedKhoroo
-            };
-          } else {
-            savedKhorooInfo = {
-              name: savedKhorooInfo.name || `${district.toUpperCase()}`,
-              district: district,
-              khoroo: khoroo
-            };
-          }
-        }
-      } else {
-        console.warn("Could not determine both district and khoroo for saving", {
-          district, khoroo, locationName, khorooInfo
+      if (!savedKhorooInfo) {
+        setSaveStatus({
+          message: 'Could not determine district and khoroo for saving',
+          isError: true
         });
+        setLoading(false);
+        return;
       }
+      
+      console.log(`Saving location with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
       
       const response = await fetch('http://localhost:3001/api/sambar', {
         method: 'POST',
@@ -169,6 +115,8 @@ function Map() {
           isError: false
         });
         setLocationName('');
+        
+        setSavedLocations(prev => [...prev, data.data]);
       } else {
         setSaveStatus({
           message: data.message || 'Failed to save location',
@@ -185,79 +133,6 @@ function Map() {
       setLoading(false);
     }
   };
-
-  const handleDistrictChange = (e) => {
-    const district = e.target.value;
-    setSelectedDistrict(district);
-    setSelectedKhoroo(''); 
-    setKhorooInfo(null);
-  };
-
-  const handleKhorooChange = (e) => {
-    setSelectedKhoroo(e.target.value);
-    setKhorooInfo(null);
-  };
-  
-  
-  const generateKhorooOptions = () => {
-    if (!selectedDistrict || !districtData[selectedDistrict]) return [];
-    
-    const count = districtData[selectedDistrict].khorooCount;
-    return Array.from({ length: count }, (_, i) => i + 1);
-  };
-    const handleKmlClick = (event) => {
-    if (event && event.featureData) {
-      
-      const featureData = event.featureData;
-      if (featureData.name) {
-        const khorooInfoData = {
-          name: featureData.name,
-          district: selectedDistrict.toLowerCase(),
-          khoroo: selectedKhoroo || null 
-        };
-        
-        if (selectedKhoroo) {
-          khorooInfoData.khoroo = selectedKhoroo;
-        } else {
-          const match = featureData.name.match(/\d+/);
-          if (match) {
-            khorooInfoData.khoroo = match[0];
-            console.log("Extracted khoroo number from feature name:", khorooInfoData.khoroo);
-          }
-        }
-        
-        setKhorooInfo(khorooInfoData);
-        
-        
-        console.log("Khoroo selected:", khorooInfoData);
-      }
-      
-      if (event.latLng) {
-        setSelectedLocation({
-          lat: event.latLng.lat(),
-          lng: event.latLng.lng()
-        });
-      }
-    }
-  };
-  const [savedLocations, setSavedLocations] = useState([]);
-  
-  useEffect(() => {
-    const fetchSavedLocations = async () => {
-      try {
-        const response = await fetch('http://localhost:3001/api/sambar');
-        const data = await response.json();
-        
-        if (data.success) {
-          setSavedLocations(data.data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching saved locations:', error);
-      }
-    };
-    
-    fetchSavedLocations();
-  }, []);
 
   return isLoaded ? (
     <div className="map-container" style={{ position: 'relative', width: '100%', height: '80vh' }}>
@@ -322,7 +197,8 @@ function Map() {
           />
         )}
       </GoogleMap>
-        {/* overlay */}
+      
+      {/* overlay */}
       <div style={{
         position: 'absolute',
         top: '10px',
@@ -359,7 +235,8 @@ function Map() {
             ))}
           </select>
         </div>
-          {selectedDistrict && (
+        
+        {selectedDistrict && (
           <div style={{ marginBottom: '15px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '15px', fontWeight: '500' }}>
               Хороо сонгох:
@@ -400,7 +277,8 @@ function Map() {
             </p>
           </div>
         )}
-          {/*loc info */}
+        
+        {/*loc info */}
         {selectedLocation && (
           <div style={{ 
             borderTop: '1px solid #ddd', 
