@@ -124,7 +124,7 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
             onLoad={(marker) => {
               markerRef.current = marker;
             }}
-            icon={createMarkerIcon(sambar?.name || "Selected", 60)} // Using sambar name in marker
+            icon={createMarkerIcon(sambar?.name || "Selected", 50)} // Using sambar name in marker
           />
         )}
         

@@ -90,7 +90,7 @@ function Map() {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: createMarkerIcon(location.name || 'Unnamed', 45),
+        icon: createMarkerIcon(location.name || 'Unnamed', 40),
         title: location.name,
         map: null
       });
