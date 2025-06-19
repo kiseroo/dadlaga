@@ -2,10 +2,10 @@
   "name": "my-mongoose-app",
   "version": "1.0.0",
   "description": "Backend API with MongoDB and Express",
-  "main": "src/app.js",
-  "scripts": {
+  "main": "src/app.js",  "scripts": {
     "start": "node src/app.js",
-    "dev": "nodemon src/app.js"
+    "dev": "nodemon src/app.js",
+    "seed": "node src/seeders/seedDatabase.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

@@ -30,57 +30,10 @@ export const createMarkerIcon = (name = '', size = 40) => {
     <!-- Name text with text shadow for better visibility -->
     <text x="256" y="120" font-family="Arial" font-size="64" font-weight="bold" fill="%23ffffff" text-anchor="middle">${encodedName}</text>
   </svg>`;
-
   return {
     url: svgMarker,
-    scaledSize: new google.maps.Size(size, size * 1.1), 
+    scaledSize: new google.maps.Size(size, size * 1.2), // Make height slightly taller to accommodate text
     origin: new google.maps.Point(0, 0),
-    anchor: new google.maps.Point(size/2, size) 
+    anchor: new google.maps.Point(size/2, size) // Keep anchor at bottom center
   };
-};
-
-/**
- * Creates an advanced HTML marker with rich content display
- * @param {Object} sambar - The sambar data object 
- * @returns {Object} - The HTML marker element
- */
-export const createAdvancedMarker = (sambar) => {
-  const createdAt = sambar.createdAt 
-    ? new Date(sambar.createdAt).toLocaleDateString() 
-    : 'Unknown date';
-  
-  const district = sambar.khorooInfo?.district?.toUpperCase() || 'Unknown district';
-  const khoroo = sambar.khorooInfo?.khoroo || 'N/A';
-  
-  const content = document.createElement("div");
-  content.classList.add("sambar-marker");
-  
-  content.innerHTML = `
-    <div class="marker-content">
-      <div class="marker-header">
-        <div class="marker-icon">
-          <i class="fa fa-building" aria-hidden="true"></i>
-        </div>
-        <div class="marker-title">${sambar.name || 'Unnamed Location'}</div>
-      </div>
-      <div class="marker-details">
-        <div class="marker-location">
-          <strong>District:</strong> ${district}<br>
-          <strong>Khoroo:</strong> ${khoroo}
-        </div>
-        <div class="marker-coordinates">
-          <div>
-            <i class="fa fa-map-marker" aria-hidden="true"></i>
-            <span>${sambar.coordinates.lat.toFixed(6)}, ${sambar.coordinates.lng.toFixed(6)}</span>
-          </div>
-        </div>
-        <div class="marker-date">
-          <i class="fa fa-calendar" aria-hidden="true"></i>
-          <span>Created: ${createdAt}</span>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  return content;
 };

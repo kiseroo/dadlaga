@@ -12,10 +12,16 @@ const districtSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    
     khorooCount: {
         type: Number,
         required: true,
         min: 1
+        
+    },
+    boundaries: {
+        type: String,  // KML path or URL
+        default: null
     },
     cyrillicCode: {
         type: String,

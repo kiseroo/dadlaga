@@ -37,6 +37,16 @@ To start the application, run:
 npm start
 ```
 
+To start the development server with auto-reload:
+```bash
+npm run dev
+```
+
+To seed the database with district and khoroo data:
+```bash
+npm run seed
+```
+
 The server will run on `http://localhost:3001`.
 
 ## API Endpoints
