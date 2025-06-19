@@ -16,6 +16,10 @@ const khorooSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    boundaries: {
+        type: String,  // KML path or URL
+        default: null
+    },
     createdAt: {
         type: Date,
         default: Date.now

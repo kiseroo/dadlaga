@@ -33,11 +33,12 @@ export const createMarkerIcon = (name = '', size = 40) => {
     <!-- Name text with text shadow for better visibility -->
     <text x="256" y="120" font-family="Arial" font-size="64" font-weight="bold" fill="%23ffffff" text-anchor="middle">${encodedName}</text>
   </svg>`;
-
   return {
     url: svgMarker,
-    scaledSize: new google.maps.Size(size, size * 1.2), // Make height slightly taller to accommodate text
+    scaledSize: new google.maps.Size(size, size*1.1
+      +
+    ), // Make height slightly taller to accommodate text
     origin: new google.maps.Point(0, 0),
-    anchor: new google.maps.Point(size/2, size) // Keep anchor at bottom center
+    anchor: new google.maps.Point(size/2, size) // Change anchor to center of the marker
   };
 };
