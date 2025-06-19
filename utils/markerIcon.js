@@ -1,11 +1,9 @@
 /**
- * Creates a Google Maps marker icon using custom SVG with larger name text
- * @param {string} name - Name to display on the marker
- * @param {number} size - Size of the marker in pixels
- * @returns {Object} Google Maps icon configuration
+ * @param {string} name - Name 
+ * @param {number} size - Size 
+ * @returns {Object} Google Maps icon config
  */
 export const createMarkerIcon = (name = '', size = 40) => {
-  // Prepare name for SVG (limit length and encode special characters)
   const displayName = name.length > 12 ? name.substring(0, 10) + '..' : name;
   const encodedName = displayName.replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -13,7 +11,6 @@ export const createMarkerIcon = (name = '', size = 40) => {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
   
-  // SVG marker with larger name text at the top of building
   const svgMarker = `data:image/svg+xml;utf8,<svg width="100" height="120" viewBox="0 0 512 550" xmlns="http://www.w3.org/2000/svg">
     <!-- Map marker shape -->
     <path fill="%23FFA500" d="M256 0C150 0 64 86 64 192c0 125.6 163.6 307.2 175.4 320.3 9.6 10.2 25.6 10.2 35.2 0C284.4 499.2 448 317.6 448 192 448 86 362 0 256 0z"/>
@@ -36,8 +33,54 @@ export const createMarkerIcon = (name = '', size = 40) => {
 
   return {
     url: svgMarker,
-    scaledSize: new google.maps.Size(size, size * 1.2), // Make height slightly taller to accommodate text
+    scaledSize: new google.maps.Size(size, size * 1.1), 
     origin: new google.maps.Point(0, 0),
-    anchor: new google.maps.Point(size/2, size) // Keep anchor at bottom center
+    anchor: new google.maps.Point(size/2, size) 
   };
+};
+
+/**
+ * Creates an advanced HTML marker with rich content display
+ * @param {Object} sambar - The sambar data object 
+ * @returns {Object} - The HTML marker element
+ */
+export const createAdvancedMarker = (sambar) => {
+  const createdAt = sambar.createdAt 
+    ? new Date(sambar.createdAt).toLocaleDateString() 
+    : 'Unknown date';
+  
+  const district = sambar.khorooInfo?.district?.toUpperCase() || 'Unknown district';
+  const khoroo = sambar.khorooInfo?.khoroo || 'N/A';
+  
+  const content = document.createElement("div");
+  content.classList.add("sambar-marker");
+  
+  content.innerHTML = `
+    <div class="marker-content">
+      <div class="marker-header">
+        <div class="marker-icon">
+          <i class="fa fa-building" aria-hidden="true"></i>
+        </div>
+        <div class="marker-title">${sambar.name || 'Unnamed Location'}</div>
+      </div>
+      <div class="marker-details">
+        <div class="marker-location">
+          <strong>District:</strong> ${district}<br>
+          <strong>Khoroo:</strong> ${khoroo}
+        </div>
+        <div class="marker-coordinates">
+          <div>
+            <i class="fa fa-map-marker" aria-hidden="true"></i>
+            <span>${sambar.coordinates.lat.toFixed(6)}, ${sambar.coordinates.lng.toFixed(6)}</span>
+          </div>
+        </div>
+        <div class="marker-date">
+          <i class="fa fa-calendar" aria-hidden="true"></i>
+          <span>Created: ${createdAt}</span>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  return content;
 };

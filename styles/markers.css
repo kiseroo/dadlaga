@@ -1,0 +1,77 @@
+.sambar-marker {
+  width: 260px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 7px 1px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.marker-content {
+  padding: 0;
+}
+
+.marker-header {
+  background-color: #FFA500;
+  padding: 12px 15px;
+  color: white;
+  display: flex;
+  align-items: center;
+}
+
+.marker-icon {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.marker-title {
+  font-weight: bold;
+  font-size: 16px;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.marker-details {
+  padding: 15px;
+}
+
+.marker-location {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.marker-coordinates {
+  margin-bottom: 8px;
+  color: #666;
+  font-size: 12px;
+}
+
+.marker-coordinates i,
+.marker-date i {
+  width: 16px;
+  text-align: center;
+  margin-right: 8px;
+}
+
+.marker-date {
+  font-size: 12px;
+  color: #666;
+  margin-top: 10px;
+}
+
+/* Animation for new markers */
+@keyframes dropIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.sambar-marker {
+  animation: dropIn 0.3s ease-out;
+}

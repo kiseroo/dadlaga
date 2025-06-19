@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, KmlLayer } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, KmlLayer, InfoWindow } from '@react-google-maps/api';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
-import { createMarkerIcon } from '../utils/markerIcon';
+import { createMarkerIcon, createAdvancedMarker } from '../utils/markerIcon';
 
 const containerStyle = {
   width: '100%', 
@@ -62,7 +62,9 @@ function Map() {
     
     fetchSavedLocations();
   }, []);
-  // marker clustering
+  // marker clustering  // State to track the active info window
+  const [activeInfoWindow, setActiveInfoWindow] = useState(null);
+  
   useEffect(() => {
     if (!mapRef.current || !isLoaded || savedLocations.length === 0) return;
 
@@ -72,22 +74,77 @@ function Map() {
     
     // Close and remove previous markers and labels
     markersRef.current.forEach(marker => {
-      if (marker.label) {
-        marker.label.close();
+      if (marker.infoWindow) {
+        marker.infoWindow.close();
       }
       marker.setMap(null);
     });
     markersRef.current = [];
 
-    const markers = savedLocations.map(location => {
+    // Create an array to store info windows
+    const infoWindows = [];
+    
+    const markers = savedLocations.map((location, index) => {
       const marker = new google.maps.Marker({
         position: {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: createMarkerIcon(location.name || 'Unnamed', 60), // Increase from 40 to 60
+        icon: createMarkerIcon(location.name || 'Unnamed', 45),
         title: location.name,
-        map: null 
+        map: null
+      });
+      
+      const contentString = `
+        <div class="sambar-marker">
+          <div class="marker-content">
+            <div class="marker-header">
+              <div class="marker-icon">
+                <i class="fa fa-building" aria-hidden="true"></i>
+              </div>
+              <div class="marker-title">${location.name || 'Unnamed Location'}</div>
+            </div>
+            <div class="marker-details">
+              <div class="marker-location">
+                <strong>District:</strong> ${location.khorooInfo?.district?.toUpperCase() || 'Unknown'}<br>
+                <strong>Khoroo:</strong> ${location.khorooInfo?.khoroo || 'N/A'}
+              </div>
+              <div class="marker-coordinates">
+                <div>
+                  <i class="fa fa-map-marker" aria-hidden="true"></i>
+                  <span>${location.coordinates.lat.toFixed(6)}, ${location.coordinates.lng.toFixed(6)}</span>
+                </div>
+              </div>
+              <div class="marker-date">
+                <i class="fa fa-calendar" aria-hidden="true"></i>
+                <span>Created: ${location.createdAt ? new Date(location.createdAt).toLocaleDateString() : 'Unknown'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const infoWindow = new google.maps.InfoWindow({
+        content: contentString,
+        maxWidth: 300
+      });
+      
+      infoWindows.push(infoWindow);
+      
+      marker.infoWindow = infoWindow;
+      
+      marker.addListener("click", () => {
+        // Close previously opened info window
+        if (activeInfoWindow) {
+          activeInfoWindow.close();
+        }
+        
+        infoWindow.open({
+          anchor: marker,
+          map: mapRef.current,
+        });
+        
+        setActiveInfoWindow(infoWindow);
       });
       
       return marker;
@@ -205,8 +262,7 @@ function Map() {
         {selectedLocation && (
           <Marker 
             position={selectedLocation}
-            animation={google.maps.Animation.BOUNCE}
-            icon={createMarkerIcon('Selected', 70)} // Increase from 50 to 70
+            icon={createMarkerIcon('Selected', 40)}
           />
         )}
         
