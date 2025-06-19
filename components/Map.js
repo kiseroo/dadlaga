@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, KmlLayer } from '@react-google-maps/api';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
+import { createMarkerIcon } from '../utils/markerIcon';
 
 const containerStyle = {
   width: '100%', 
@@ -68,7 +69,14 @@ function Map() {
     if (markerClustererRef.current) {
       markerClustererRef.current.clearMarkers();
     }
-    markersRef.current.forEach(marker => marker.setMap(null));
+    
+    // Close and remove previous markers and labels
+    markersRef.current.forEach(marker => {
+      if (marker.label) {
+        marker.label.close();
+      }
+      marker.setMap(null);
+    });
     markersRef.current = [];
 
     const markers = savedLocations.map(location => {
@@ -77,12 +85,7 @@ function Map() {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: {
-          url: 'https://s.hdnux.com/photos/12/10/21/2655298/7/ratio2x3_1920.jpg',
-          scaledSize: new google.maps.Size(30, 30),
-          origin: new google.maps.Point(0, 0),
-          anchor: new google.maps.Point(15, 30)
-        },
+        icon: createMarkerIcon(location.name || 'Unnamed', 60), // Increase from 40 to 60
         title: location.name,
         map: null 
       });
@@ -102,7 +105,12 @@ function Map() {
       if (markerClustererRef.current) {
         markerClustererRef.current.clearMarkers();
       }
-      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.forEach(marker => {
+        if (marker.label) {
+          marker.label.close();
+        }
+        marker.setMap(null);
+      });
     };
   }, [savedLocations, isLoaded]);
 
@@ -198,6 +206,7 @@ function Map() {
           <Marker 
             position={selectedLocation}
             animation={google.maps.Animation.BOUNCE}
+            icon={createMarkerIcon('Selected', 70)} // Increase from 50 to 70
           />
         )}
         
