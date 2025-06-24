@@ -422,7 +422,7 @@ function Map() {
             margin: '8px 0 0 0',
             fontStyle: 'italic'
           }}>
-            Note: To add Shons, click the "Шон" button on an existing Sambar marker
+            
           </p>
         </div>
           {/* Location Stats Display */}

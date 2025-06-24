@@ -5,6 +5,7 @@ const userRoutes = require('./routes/users');
 const sambarRoutes = require('./routes/sambar');
 const shonRoutes = require('./routes/shon');
 const districtRoutes = require('./routes/districts');
+const lineRoutes = require('./routes/lines');
 const mongoose = require('mongoose');
 
 const app = express();
@@ -16,6 +17,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/sambar', sambarRoutes);
 app.use('/api/shon', shonRoutes);
 app.use('/api/districts', districtRoutes);
+app.use('/api/lines', lineRoutes);
 
 connectToMongoDB().catch(console.error);
 

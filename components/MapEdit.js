@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { GoogleMap, KmlLayer, Marker } from '@react-google-maps/api';
+import { GoogleMap, KmlLayer, Marker, Polyline, InfoWindow } from '@react-google-maps/api';
 import { useJsApiLoader } from '@react-google-maps/api';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 import { createMarkerIcon } from '../utils/markerIcon';
@@ -25,7 +25,13 @@ const MapEdit = ({
   onKhorooInfoChange, 
   locationType = 'sambar',
   allShons = [],
-  activeShonId = null
+  activeShonId = null,
+  lines = [],
+  currentLine = null,
+  isDrawingLine = false,
+  selectedShons = [],
+  onShonSelect = null,
+  onLineClick = null
 }) => {
   const [initialCenter] = useState(() => {
     if (initialLocation) {
@@ -75,20 +81,29 @@ const MapEdit = ({
     libraries: ['geometry']
   });
   const handleMapClick = useCallback((event) => {
-    // Allow map clicks in shon mode to add new shons
-    if (locationType === 'shon' && event.latLng) {
+    if (event.latLng) {
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
       
-      console.log("Map clicked in shon mode - new shon position:", { lat, lng });
+      console.log("Map clicked - position:", { lat, lng });
+      console.log("isDrawingLine:", isDrawingLine);
+      console.log("onLineClick function exists:", typeof onLineClick === 'function');
       
+      // If we're in line drawing mode, handle the line click
+      if (isDrawingLine && onLineClick && typeof onLineClick === 'function') {
+        console.log("Calling onLineClick with coordinates:", { lat, lng });
+        onLineClick({ lat, lng });
+        return;
+      }
+      
+      // Otherwise, handle normal location change
       if (onLocationChange && typeof onLocationChange === 'function') {
         onLocationChange({ lat, lng });
       }
     } else {
-      console.log("Map clicked, but not in shon mode or no coordinates");
+      console.log("Map clicked, but no coordinates available");
     }
-  }, [locationType, onLocationChange]);
+  }, [onLocationChange, isDrawingLine, onLineClick]);
   
   const handleKmlClick = useCallback((event) => {
     if (event && event.featureData) {
@@ -258,9 +273,12 @@ const MapEdit = ({
               }}
               icon={createMarkerIcon(shon.code || shon.name || 'Shon', 30, 'shon')}
               opacity={activeShonId === shon._id ? 0.5 : 1} 
-              zIndex={activeShonId === shon._id ? 999 : 500} 
+              zIndex={activeShonId === shon._id ? 999 : (selectedShons.includes(shon._id) ? 800 : 500)} 
               onClick={() => {
-                if (onLocationChange && typeof onLocationChange === 'function') {
+                if (onShonSelect && typeof onShonSelect === 'function') {
+                  console.log("Shon marker clicked for selection:", shon);
+                  onShonSelect(shon._id);
+                } else if (onLocationChange && typeof onLocationChange === 'function') {
                   console.log("Shon marker clicked:", shon);
                 }
               }}
@@ -268,6 +286,135 @@ const MapEdit = ({
           );
         })}
         
+        {/* Highlight selected shons for line drawing */}
+        {selectedShons.map(shonId => {
+          const shon = allShons.find(s => s._id === shonId);
+          if (!shon) return null;
+          
+          const shonLocation = shon.coordinates || shon.location;
+          if (!shonLocation || !shonLocation.lat || !shonLocation.lng) return null;
+          
+          return (
+            <Marker
+              key={`selected-${shon._id}`}
+              position={{
+                lat: parseFloat(shonLocation.lat),
+                lng: parseFloat(shonLocation.lng)
+              }}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: '#007bff',
+                fillOpacity: 0.3,
+                strokeColor: '#007bff',
+                strokeWeight: 3,
+                scale: 20
+              }}
+              zIndex={600}
+            />
+          );
+        })}
+
+        {/* Show red circles for current line inflection points during drawing */}
+        {isDrawingLine && currentLine && currentLine.coordinates && currentLine.coordinates.map((point, index) => (
+          <Marker
+            key={`inflection-${index}`}
+            position={{
+              lat: parseFloat(point.lat),
+              lng: parseFloat(point.lng)
+            }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: '#FF0000',
+              fillOpacity: 0.8,
+              strokeColor: '#CC0000',
+              strokeWeight: 2,
+              scale: 8
+            }}
+            zIndex={900}
+            title={`Inflection Point ${index + 1}`}
+          />
+        ))}
+
+        {/* Show current line being drawn with preview to end point */}
+        {isDrawingLine && currentLine && currentLine.coordinates && currentLine.coordinates.length > 0 && (
+          (() => {
+            // Find the end shon to show complete line preview
+            const endShon = allShons.find(s => s._id === currentLine.endShonId);
+            if (!endShon) return null;
+            
+            const endCoords = endShon.coordinates || endShon.location;
+            const completeLineCoords = [
+              ...currentLine.coordinates,
+              { lat: endCoords.lat, lng: endCoords.lng }
+            ];
+            
+            return (
+              <Polyline
+                path={completeLineCoords.map(coord => ({
+                  lat: parseFloat(coord.lat),
+                  lng: parseFloat(coord.lng)
+                }))}
+                options={{
+                  strokeColor: '#FF0000',
+                  strokeOpacity: 0.8,
+                  strokeWeight: 3,
+                  clickable: false
+                }}
+              />
+            );
+          })()
+        )}
+
+        {/* Show saved lines */}
+        {lines && lines.length > 0 && lines.map((line, index) => {
+          if (!line.coordinates || line.coordinates.length === 0) return null;
+          
+          return (
+            <Polyline
+              key={`saved-line-${line._id || index}`}
+              path={line.coordinates.map(coord => ({
+                lat: parseFloat(coord.lat),
+                lng: parseFloat(coord.lng)
+              }))}
+              options={{
+                strokeColor: '#CC0000',
+                strokeOpacity: 0.9,
+                strokeWeight: 4,
+                clickable: true
+              }}
+              onClick={() => {
+                // Show info about the line when clicked
+                const startShon = allShons.find(s => s._id === line.startShonId);
+                const endShon = allShons.find(s => s._id === line.endShonId);
+                alert(`Line: ${startShon?.code || startShon?.name || 'Unknown'} → ${endShon?.code || endShon?.name || 'Unknown'}\nPoints: ${line.coordinates.length}`);
+              }}
+            />
+          );
+        })}
+
+        {/* Show red circles for saved line inflection points */}
+        {lines && lines.length > 0 && lines.map((line, lineIndex) => 
+          line.coordinates && line.coordinates.map((point, pointIndex) => (
+            <Marker
+              key={`saved-point-${line._id || lineIndex}-${pointIndex}`}
+              position={{
+                lat: parseFloat(point.lat),
+                lng: parseFloat(point.lng)
+              }}
+              icon={{
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: '#990000',
+                fillOpacity: 0.6,
+                strokeColor: '#660000',
+                strokeWeight: 1,
+                scale: 4
+              }}
+              zIndex={700}
+              title={`Line Point ${pointIndex + 1}`}
+            />
+          ))
+        )}
+
         {/* KML Layer */}
         {kmlUrl && kmlVisible && (
           <KmlLayer

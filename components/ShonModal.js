@@ -10,16 +10,22 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);  const [shonToDelete, setShonToDelete] = useState(null);
   const [activeShon, setActiveShon] = useState(null);
+  const [lines, setLines] = useState([]);
+  const [isDrawingLine, setIsDrawingLine] = useState(false);
+  const [currentLine, setCurrentLine] = useState(null);
+  const [selectedShons, setSelectedShons] = useState([]);
 
-  // Initialize when modal opens
   useEffect(() => {
     if (isOpen && sambar) {
       fetchShons();
-      // Clear any previous state
+      fetchLines();
       setCurrentShon(null);
       setActiveShon(null);
       setIsAddingNew(false);
       setError('');
+      setIsDrawingLine(false);
+      setCurrentLine(null);
+      setSelectedShons([]);
     }
   }, [isOpen, sambar]);
 
@@ -30,24 +36,20 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setLoading(true);
       setError('');
       
-      // Fetch shons for this sambar using sambarCode parameter
       const response = await fetch(
         `http://localhost:3001/api/shon?sambarCode=${encodeURIComponent(sambar.name)}`
       );
       const data = await response.json();
       
       if (data.success) {
-        // Transform the data to ensure both location and coordinates are available
         const transformedShons = (data.data || []).map(shon => ({
           ...shon,
-          // Ensure coordinates field exists for compatibility
           coordinates: shon.location ? {
             lat: shon.location.lat,
             lng: shon.location.lng
           } : (shon.coordinates || { lat: 0, lng: 0 })
         }));
         setShons(transformedShons);
-        // Don't show error if no shons found - this is normal
         setError('');
       } else {
         setError(data.message || 'Failed to load shons');
@@ -59,6 +61,27 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setLoading(false);
     }
   };
+  const fetchLines = async () => {
+    if (!sambar) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:3001/api/lines?sambarCode=${encodeURIComponent(sambar.name)}`
+      );
+      const data = await response.json();
+      
+      if (data.success) {
+        setLines(data.data || []);
+      } else {
+        console.log('No lines found or failed to load lines');
+        setLines([]);
+      }
+    } catch (error) {
+      console.error('Error fetching lines:', error);
+      setLines([]);
+    }
+  };
+
   const handleCreateNewShon = async () => {
     if (!newShonName.trim()) {
       setError('Please enter a name for the new shon');
@@ -69,7 +92,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setLoading(true);
       setError('');
       
-      // Create a new shon near the sambar's location
       const newShon = {
         name: newShonName.trim(),
         coordinates: {
@@ -83,7 +105,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         }
       };
 
-      // Immediately save the new shon to database
       await handleSaveNewShon(newShon);
       setNewShonName('');
     } catch (error) {
@@ -103,11 +124,10 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setLoading(true);
       setError('');
       
-      // Prepare data in the format expected by the backend
       const requestData = {
-        sambarCode: sambar.name, // Use sambar name as the reference
-        code: shon.name.trim(), // Use shon name as the code
-        location: { // Backend expects 'location', not 'coordinates'
+        sambarCode: sambar.name, 
+        code: shon.name.trim(), 
+        location: { 
           lat: Number(shon.coordinates.lat),
           lng: Number(shon.coordinates.lng)
         }
@@ -126,10 +146,8 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       const data = await response.json();
       
       if (data.success) {
-        // Add the new shon to the list with proper format
         const newShonData = {
           ...data.data,
-          // Ensure both location and coordinates are available for compatibility
           coordinates: {
             lat: data.data.location?.lat || 0,
             lng: data.data.location?.lng || 0
@@ -138,7 +156,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         setShons([...shons, newShonData]);
         setError('');
         alert('Shon created successfully!');
-        // Don't refresh to avoid duplicates, we already added the new shon
       } else {
         setError(data.message || 'Failed to create shon');
       }
@@ -151,14 +168,13 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setIsAddingNew(false);
     }
   };  const handleEditShon = (shon) => {
-    // Set up editing state similar to sambar editing
-    // Handle both 'code' (from backend) and 'name' (legacy) fields
+    
     const shonName = shon.code || shon.name || '';
     const shonCoordinates = shon.location || shon.coordinates || { lat: 0, lng: 0 };
     
     setActiveShon({
       ...shon,
-      name: shonName, // Use name for internal state management
+      name: shonName, 
       coordinates: {
         lat: parseFloat(shonCoordinates.lat),
         lng: parseFloat(shonCoordinates.lng)
@@ -188,6 +204,12 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
   const handleLocationChange = (newLocation) => {
     console.log("Location changed:", newLocation);
     
+    // If we're drawing a line, add the point to the line
+    if (isDrawingLine) {
+      handleLineClick(newLocation);
+      return;
+    }
+    
     if (activeShon) {
       const updatedCoordinates = {
         lat: parseFloat(newLocation.lat),
@@ -197,11 +219,9 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setActiveShon(prevShon => ({
         ...prevShon,
         coordinates: updatedCoordinates,
-        // Also update location field for backend compatibility
         location: updatedCoordinates
       }));
       
-      // Also update currentShon to keep them in sync
       setCurrentShon(prevShon => ({
         ...prevShon,
         coordinates: updatedCoordinates,
@@ -219,7 +239,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         location: updatedCoordinates
       }));
     } else {
-      // If no active shon, create a new shon at clicked location
       setCurrentShon({
         name: '',
         coordinates: {
@@ -252,7 +271,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
           name: newKhorooInfo.name || prevShon.khorooInfo?.name
         }
       }));
-      // Also update currentShon to keep them in sync
       setCurrentShon(prevShon => ({
         ...prevShon,
         khorooInfo: {
@@ -286,11 +304,10 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
       setLoading(true);
       setError('');
       
-      // Prepare the update data to match backend expectations
       const updateData = {
-        sambarCode: sambar.name, // Use sambar name as the reference
-        code: activeShon.name.trim(), // Use shon name as the code
-        location: { // Backend expects 'location', not 'coordinates'
+        sambarCode: sambar.name, 
+        code: activeShon.name.trim(), 
+        location: { 
           lat: Number(activeShon.coordinates.lat),
           lng: Number(activeShon.coordinates.lng)
         }
@@ -312,7 +329,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         setActiveShon(null);
         setCurrentShon(null);
         
-        // Refresh the shons list to get the latest data from server
         await fetchShons();
         
         alert('Shon updated successfully!');
@@ -385,6 +401,159 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         ...prevShon,
         name: newName
       }));
+    }
+  };
+
+  const handleStartDrawingLine = () => {
+    if (selectedShons.length < 2) {
+      setError('Please select at least 2 shons to connect with a line');
+      return;
+    }
+    
+    // Find the selected shons
+    const startShon = shons.find(s => s._id === selectedShons[0]);
+    const endShon = shons.find(s => s._id === selectedShons[1]);
+    
+    if (!startShon || !endShon) {
+      setError('Selected shons not found');
+      return;
+    }
+    
+    // Get coordinates from both location and coordinates fields for compatibility
+    const startCoords = startShon.coordinates || startShon.location;
+    const endCoords = endShon.coordinates || endShon.location;
+    
+    setIsDrawingLine(true);
+    setCurrentLine({
+      startShonId: selectedShons[0],
+      endShonId: selectedShons[1],
+      coordinates: [
+        // Start with the first shon's coordinates
+        { lat: startCoords.lat, lng: startCoords.lng }
+        // Inflection points will be added between start and end
+        // End shon coordinates will be added when saving
+      ],
+      sambarCode: sambar.name
+    });
+    setError('Click on the map to add inflection points for the line. The line will automatically connect from the first shon to the second shon.');
+  };
+
+  const handleLineClick = (coordinates) => {
+    if (!isDrawingLine || !currentLine) return;
+    
+    console.log("Adding inflection point:", coordinates);
+    // Add the new inflection point (but don't add the end point yet)
+    setCurrentLine(prev => ({
+      ...prev,
+      coordinates: [...prev.coordinates, { lat: coordinates.lat, lng: coordinates.lng }]
+    }));
+    console.log("Updated currentLine with new point");
+  };
+
+  const handleSaveLine = async () => {
+    if (!currentLine) {
+      setError('No line to save');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Find the end shon to complete the line
+      const endShon = shons.find(s => s._id === currentLine.endShonId);
+      if (!endShon) {
+        setError('End shon not found');
+        return;
+      }
+      
+      // Get end shon coordinates
+      const endCoords = endShon.coordinates || endShon.location;
+      
+      // Complete the line by adding the end shon coordinates
+      const completeCoordinates = [
+        ...currentLine.coordinates,
+        { lat: endCoords.lat, lng: endCoords.lng }
+      ];
+      
+      const lineData = {
+        sambarCode: sambar.name,
+        startShonId: currentLine.startShonId,
+        endShonId: currentLine.endShonId,
+        coordinates: completeCoordinates
+      };
+
+      console.log("Saving complete line with coordinates:", lineData);
+
+      const response = await fetch('http://localhost:3001/api/lines', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(lineData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLines(prev => [...prev, data.data]);
+        setCurrentLine(null);
+        setIsDrawingLine(false);
+        setSelectedShons([]);
+        setError('');
+        alert('Line saved successfully!');
+      } else {
+        setError(data.message || 'Failed to save line');
+      }
+    } catch (error) {
+      console.error('Error saving line:', error);
+      setError('Error saving line. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelDrawing = () => {
+    setCurrentLine(null);
+    setIsDrawingLine(false);
+    setSelectedShons([]);
+    setError('');
+  };
+
+  const handleShonSelect = (shonId) => {
+    if (isDrawingLine) return;
+    
+    setSelectedShons(prev => {
+      if (prev.includes(shonId)) {
+        return prev.filter(id => id !== shonId);
+      } else if (prev.length < 2) {
+        return [...prev, shonId];
+      } else {
+        return [prev[1], shonId];
+      }
+    });
+  };
+
+  const handleDeleteLine = async (lineId) => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`http://localhost:3001/api/lines/${lineId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setLines(prev => prev.filter(line => line._id !== lineId));
+        alert('Line deleted successfully!');
+      } else {
+        setError(data.message || 'Failed to delete line');
+      }
+    } catch (error) {
+      console.error('Error deleting line:', error);
+      setError('Error deleting line. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -485,6 +654,159 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
               </div>
             )}
             
+            {/* Line Management Section */}
+            <div style={{ marginTop: '20px', borderTop: '1px solid #ddd', paddingTop: '15px' }}>
+              <h3 style={{ margin: '0 0 15px 0', color: '#333', fontSize: '16px' }}>
+                <i className="fa fa-connectdevelop" style={{ marginRight: '8px', color: '#007bff' }}></i>
+                Connection Lines
+              </h3>
+              
+              {/* Shon Selection for Line Drawing */}
+              {!isDrawingLine && (
+                <div style={{ marginBottom: '15px' }}>
+                  <p style={{ fontSize: '14px', margin: '0 0 10px 0' }}>
+                    Select 2 shons to connect:
+                  </p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '10px' }}>
+                    {shons.map((shon) => (
+                      <button
+                        key={shon._id}
+                        onClick={() => handleShonSelect(shon._id)}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '12px',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          backgroundColor: selectedShons.includes(shon._id) ? '#007bff' : '#f8f9fa',
+                          color: selectedShons.includes(shon._id) ? 'white' : '#333',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {shon.code || shon.name}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleStartDrawingLine}
+                    disabled={selectedShons.length !== 2}
+                    style={{
+                      padding: '8px 15px',
+                      backgroundColor: selectedShons.length === 2 ? '#007bff' : '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: selectedShons.length === 2 ? 'pointer' : 'not-allowed',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Start Drawing Line
+                  </button>
+                </div>
+              )}
+
+              {/* Line Drawing Controls */}
+              {isDrawingLine && (
+                <div style={{ 
+                  padding: '15px',
+                  backgroundColor: '#e7f3ff',
+                  borderRadius: '4px',
+                  marginBottom: '15px'
+                }}>
+                  <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: '#0056b3' }}>
+                    Drawing Line Mode
+                  </p>
+                  <p style={{ fontSize: '12px', margin: '0 0 10px 0' }}>
+                    Click on the map to add inflection points for the line.
+                  </p>
+                  {currentLine && (
+                    <p style={{ fontSize: '12px', margin: '0 0 15px 0' }}>
+                      Points added: {currentLine.coordinates.length}
+                    </p>
+                  )}
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={handleSaveLine}
+                      disabled={!currentLine || currentLine.coordinates.length === 0}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Save Line
+                    </button>
+                    <button
+                      onClick={handleCancelDrawing}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Existing Lines List */}
+              {lines.length > 0 && (
+                <div>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Existing Lines:</h4>
+                  <div style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                    {lines.map((line, index) => {
+                      const startShon = shons.find(s => s._id === line.startShonId);
+                      const endShon = shons.find(s => s._id === line.endShonId);
+                      return (
+                        <div
+                          key={line._id || index}
+                          style={{
+                            padding: '8px',
+                            border: '1px solid #ddd',
+                            borderRadius: '3px',
+                            marginBottom: '5px',
+                            backgroundColor: '#f8f9fa',
+                            fontSize: '12px'
+                          }}
+                        >
+                          <div style={{ marginBottom: '5px' }}>
+                            <strong>
+                              {startShon?.code || startShon?.name || 'Unknown'} → {endShon?.code || endShon?.name || 'Unknown'}
+                            </strong>
+                          </div>
+                          <div style={{ color: '#666', marginBottom: '5px' }}>
+                            Points: {line.coordinates?.length || 0}
+                          </div>
+                          <button
+                            onClick={() => handleDeleteLine(line._id)}
+                            style={{
+                              padding: '2px 6px',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '2px',
+                              cursor: 'pointer',
+                              fontSize: '10px'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="map-modal-actions">
               <button 
                 className="cancel-button"
@@ -497,7 +819,7 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
             {/* Right Panel - Map */}
           <div className="shon-map-panel" style={{ flex: '1.5', border: '1px solid #ddd', borderRadius: '4px' }}>
             <div style={{ height: '100%', minHeight: '60vh', position: 'relative' }}>              <MapEdit
-                key={`map-${shons.length}-${activeShon ? activeShon._id : 'none'}`}
+                key={`map-${shons.length}-${activeShon ? activeShon._id : 'none'}-${lines.length}`}
                 initialLocation={
                   activeShon ? activeShon.coordinates : 
                   currentShon ? currentShon.coordinates : 
@@ -513,6 +835,12 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                 locationType="shon"
                 allShons={shons}
                 activeShonId={activeShon ? activeShon._id : null}
+                onLineClick={isDrawingLine ? handleLineClick : null}
+                lines={lines}
+                currentLine={currentLine}
+                isDrawingLine={isDrawingLine}
+                selectedShons={selectedShons}
+                onShonSelect={handleShonSelect}
               />
               
               {/* Show save button when adding new shon by clicking map */}
@@ -638,6 +966,52 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                       }}
                     >
                       {loading ? 'Updating...' : 'Update Shon'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Line Drawing Controls */}
+              {isDrawingLine && currentLine && (
+                <div className="line-drawing-controls" style={{ 
+                  padding: '10px', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  position: 'absolute',
+                  bottom: '10px',
+                  left: '10px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  minWidth: '200px'
+                }}>
+                  <p style={{ fontSize: '12px', marginBottom: '10px' }}>
+                    Drawing line between selected shons. Click on the map to add points.
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <button 
+                      className="cancel-button"
+                      onClick={handleCancelDrawing}
+                      style={{ 
+                        fontSize: '12px', 
+                        padding: '5px 10px',
+                        marginRight: '10px'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="save-button"
+                      onClick={handleSaveLine}
+                      disabled={loading}
+                      style={{ 
+                        backgroundColor: '#32CD32',
+                        borderColor: '#28a745',
+                        fontSize: '12px',
+                        padding: '5px 10px'
+                      }}
+                    >
+                      {loading ? 'Saving...' : 'Save Line'}
                     </button>
                   </div>
                 </div>
