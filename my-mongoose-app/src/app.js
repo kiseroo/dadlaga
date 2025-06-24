@@ -3,6 +3,7 @@ const cors = require('cors');
 const connectToMongoDB = require('./config/database');
 const userRoutes = require('./routes/users');
 const sambarRoutes = require('./routes/sambar');
+const shonRoutes = require('./routes/shon');
 const districtRoutes = require('./routes/districts');
 const mongoose = require('mongoose');
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/sambar', sambarRoutes);
+app.use('/api/shon', shonRoutes);
 app.use('/api/districts', districtRoutes);
 
 connectToMongoDB().catch(console.error);

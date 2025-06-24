@@ -19,8 +19,14 @@ function Map() {
   const [locationName, setLocationName] = useState('');
   const [saveStatus, setSaveStatus] = useState({ message: '', isError: false });
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [savedLocations, setSavedLocations] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");  
+  const [sambarLocations, setSambarLocations] = useState([]);
+  const [shonLocations, setShonLocations] = useState([]);
+  const [locationType, setLocationType] = useState('sambar'); // For saving new locations
+  
+  // Add filter states
+  const [showSambars, setShowSambars] = useState(true);
+  const [showShons, setShowShons] = useState(true);
   
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
@@ -45,34 +51,38 @@ function Map() {
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
-  });
-  useEffect(() => {
-    const fetchSavedLocations = async () => {
+  });  useEffect(() => {
+    const fetchLocations = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/sambar');
-        const data = await response.json();
+        const sambarResponse = await fetch(`http://localhost:3001/api/sambar`);
+        const sambarData = await sambarResponse.json();
         
-        if (data.success) {
-          setSavedLocations(data.data || []);
+        if (sambarData.success) {
+          setSambarLocations(sambarData.data || []);
+        }
+
+        const shonResponse = await fetch(`http://localhost:3001/api/shon`);
+        const shonData = await shonResponse.json();
+        
+        if (shonData.success) {
+          setShonLocations(shonData.data || []);
         }
       } catch (error) {
-        console.error('Error fetching saved locations:', error);
+        console.error('Error fetching locations:', error);
       }
     };
     
-    fetchSavedLocations();
+    fetchLocations();
   }, []);
-  // marker clustering  // State to track the active info window
+  // marker clustering  
   const [activeInfoWindow, setActiveInfoWindow] = useState(null);
-  
-  useEffect(() => {
-    if (!mapRef.current || !isLoaded || savedLocations.length === 0) return;
+    useEffect(() => {
+    if (!mapRef.current || !isLoaded || (sambarLocations.length === 0 && shonLocations.length === 0)) return;
 
     if (markerClustererRef.current) {
       markerClustererRef.current.clearMarkers();
     }
     
-    // Close and remove previous markers and labels
     markersRef.current.forEach(marker => {
       if (marker.infoWindow) {
         marker.infoWindow.close();
@@ -81,16 +91,18 @@ function Map() {
     });
     markersRef.current = [];
 
-    // Create an array to store info windows
+    // store info windows
     const infoWindows = [];
     
-    const markers = savedLocations.map((location, index) => {
+    const sambarMarkers = showSambars ? sambarLocations
+      .filter(location => location && location.coordinates && location.coordinates.lat && location.coordinates.lng)
+      .map((location) => {
       const marker = new google.maps.Marker({
         position: {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: createMarkerIcon(location.name || 'Unnamed', 40),
+        icon: createMarkerIcon(location.name || 'Unnamed', 40, 'sambar'),
         title: location.name,
         map: null
       });
@@ -98,13 +110,16 @@ function Map() {
       const contentString = `
         <div class="sambar-marker">
           <div class="marker-content">
-            <div class="marker-header">
+            <div class="marker-header" style="background-color: #FFA500;">
               <div class="marker-icon">
                 <i class="fa fa-building" aria-hidden="true"></i>
               </div>
               <div class="marker-title">${location.name || 'Unnamed Location'}</div>
             </div>
             <div class="marker-details">
+              <div class="marker-type">
+                <strong>Type:</strong> Самбар (Sambar)
+              </div>
               <div class="marker-location">
                 <strong>District:</strong> ${location.khorooInfo?.district?.toUpperCase() || 'Unknown'}<br>
                 <strong>Khoroo:</strong> ${location.khorooInfo?.khoroo || 'N/A'}
@@ -130,11 +145,9 @@ function Map() {
       });
       
       infoWindows.push(infoWindow);
-      
       marker.infoWindow = infoWindow;
       
       marker.addListener("click", () => {
-        // Close previously opened info window
         if (activeInfoWindow) {
           activeInfoWindow.close();
         }
@@ -148,12 +161,83 @@ function Map() {
       });
       
       return marker;
-    });
+    }) : []; 
+    
+    const shonMarkers = showShons ? shonLocations
+      .filter(location => location && location.coordinates && location.coordinates.lat && location.coordinates.lng)
+      .map((location) => {
+      const marker = new google.maps.Marker({
+        position: {
+          lat: location.coordinates.lat,
+          lng: location.coordinates.lng
+        },
+        icon: createMarkerIcon(location.name || 'Unnamed', 40, 'shon'),
+        title: location.name,
+        map: null
+      });
+      
+      const contentString = `
+        <div class="shon-marker">
+          <div class="marker-content">
+            <div class="marker-header" style="background-color: #32CD32;">
+              <div class="marker-icon">
+                <i class="fa fa-lightbulb" aria-hidden="true"></i>
+              </div>
+              <div class="marker-title">${location.name || 'Unnamed Location'}</div>
+            </div>
+            <div class="marker-details">
+              <div class="marker-type">
+                <strong>Type:</strong> Шон (Shon)
+              </div>
+              <div class="marker-location">
+                <strong>District:</strong> ${location.khorooInfo?.district?.toUpperCase() || 'Unknown'}<br>
+                <strong>Khoroo:</strong> ${location.khorooInfo?.khoroo || 'N/A'}
+              </div>
+              <div class="marker-coordinates">
+                <div>
+                  <i class="fa fa-map-marker" aria-hidden="true"></i>
+                  <span>${location.coordinates.lat.toFixed(6)}, ${location.coordinates.lng.toFixed(6)}</span>
+                </div>
+              </div>
+              <div class="marker-date">
+                <i class="fa fa-calendar" aria-hidden="true"></i>
+                <span>Created: ${location.createdAt ? new Date(location.createdAt).toLocaleDateString() : 'Unknown'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const infoWindow = new google.maps.InfoWindow({
+        content: contentString,
+        maxWidth: 300
+      });
+      
+      infoWindows.push(infoWindow);
+      marker.infoWindow = infoWindow;
+      
+      marker.addListener("click", () => {
+        if (activeInfoWindow) {
+          activeInfoWindow.close();
+        }
+        
+        infoWindow.open({
+          anchor: marker,
+          map: mapRef.current,
+        });
+        
+        setActiveInfoWindow(infoWindow);
+      });
+      
+      return marker;
+    }) : []; 
 
-    markersRef.current = markers;    
+    const allMarkers = [...sambarMarkers, ...shonMarkers];
+    markersRef.current = allMarkers;
+    
     markerClustererRef.current = new MarkerClusterer({
       map: mapRef.current,
-      markers: markers,
+      markers: allMarkers,
       gridSize: 60,
       maxZoom: 15 
     });
@@ -169,7 +253,7 @@ function Map() {
         marker.setMap(null);
       });
     };
-  }, [savedLocations, isLoaded]);
+  }, [sambarLocations, shonLocations, isLoaded, showSambars, showShons]);
 
   const handleMapClick = (event) => {
     if (!kmlUrl) {
@@ -190,8 +274,7 @@ function Map() {
     
     setLoading(true);
     setSaveStatus({ message: '', isError: false });
-    
-    try {      
+      try {      
       const savedKhorooInfo = prepareSavedKhorooInfo(locationName);
       
       if (!savedKhorooInfo) {
@@ -202,10 +285,10 @@ function Map() {
         setLoading(false);
         return;
       }
+        console.log(`Saving ${locationType} with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
       
-      console.log(`Saving location with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
-      
-      const response = await fetch('http://localhost:3001/api/sambar', {
+      const endpoint = locationType === 'sambar' ? 'sambar' : 'shon';
+      const response = await fetch(`http://localhost:3001/api/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -226,7 +309,12 @@ function Map() {
         });
         setLocationName('');
         
-        setSavedLocations(prev => [...prev, data.data]);
+        // Update the appropriate state array
+        if (locationType === 'sambar') {
+          setSambarLocations(prev => [...prev, data.data]);
+        } else {
+          setShonLocations(prev => [...prev, data.data]);
+        }
       } else {
         setSaveStatus({
           message: data.message || 'Failed to save location',
@@ -258,11 +346,10 @@ function Map() {
           streetViewControl: false,
           mapTypeControl: true
         }}
-      >        {/* Show current selected loc */}
-        {selectedLocation && (
+      >        {/* Show current selected loc */}        {selectedLocation && (
           <Marker 
             position={selectedLocation}
-            icon={createMarkerIcon('Selected', 40)}
+            icon={createMarkerIcon('Selected', 40, locationType)}
           />
         )}
         
@@ -287,8 +374,7 @@ function Map() {
         )}
       </GoogleMap>
       
-      {/* overlay */}
-      <div style={{
+      {/* overlay */}      <div style={{
         position: 'absolute',
         top: '10px',
         left: '10px',
@@ -298,8 +384,110 @@ function Map() {
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         width: '350px',
         zIndex: 10
-      }}>
-        <h3 style={{ margin: '0 0 15px', fontSize: '18px' }}>Дүүрэг & Хороо</h3>
+      }}>        <h3 style={{ margin: '0 0 15px', fontSize: '18px' }}>Дүүрэг & Хороо</h3>
+        
+        {/* Location Type Selector for Adding New Location */}
+        <div style={{ marginBottom: '15px' }}>
+          <p style={{ margin: '0 0 8px', fontSize: '15px', fontWeight: '500' }}>Add New Location Type:</p>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setLocationType('sambar')}
+              style={{
+                flex: 1,
+                padding: '10px 8px',
+                backgroundColor: locationType === 'sambar' ? '#FFA500' : '#f8f9fa',
+                color: locationType === 'sambar' ? 'white' : '#333',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: locationType === 'sambar' ? '500' : 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <i className="fa fa-building" style={{ marginRight: '8px' }}></i>
+              Самбар
+            </button>
+            <button
+              onClick={() => setLocationType('shon')}
+              style={{
+                flex: 1,
+                padding: '10px 8px',
+                backgroundColor: locationType === 'shon' ? '#32CD32' : '#f8f9fa',
+                color: locationType === 'shon' ? 'white' : '#333',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: locationType === 'shon' ? '500' : 'normal',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <i className="fa fa-lightbulb" style={{ marginRight: '8px' }}></i>
+              Шон
+            </button>
+          </div>
+        </div>
+          {/* Location Stats Display */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '10px', 
+          marginBottom: '15px', 
+          padding: '10px', 
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px'
+        }}>
+          <div 
+            onClick={() => setShowSambars(!showSambars)}
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              padding: '8px',
+              backgroundColor: showSambars ? 'rgba(255, 165, 0, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px',
+              border: showSambars ? '1px solid rgba(255, 165, 0, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              opacity: showSambars ? 1 : 0.6,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <i className="fa fa-building" style={{ color: '#FFA500', fontSize: '18px', marginBottom: '5px' }}></i>
+            <span style={{ fontWeight: '500' }}>Самбар</span>
+            <span>{sambarLocations.length}</span>
+            <div style={{ marginTop: '5px', fontSize: '12px' }}>
+              {showSambars ? 'Showing' : 'Hidden'}
+            </div>
+          </div>
+          <div 
+            onClick={() => setShowShons(!showShons)}
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              padding: '8px',
+              backgroundColor: showShons ? 'rgba(50, 205, 50, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px',
+              border: showShons ? '1px solid rgba(50, 205, 50, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              opacity: showShons ? 1 : 0.6,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <i className="fa fa-lightbulb" style={{ color: '#32CD32', fontSize: '18px', marginBottom: '5px' }}></i>
+            <span style={{ fontWeight: '500' }}>Шон</span>
+            <span>{shonLocations.length}</span>
+            <div style={{ marginTop: '5px', fontSize: '12px' }}>
+              {showShons ? 'Showing' : 'Hidden'}
+            </div>
+          </div>
+        </div>
         
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '8px', fontSize: '15px', fontWeight: '500' }}>
@@ -374,7 +562,9 @@ function Map() {
             marginTop: '20px', 
             paddingTop: '20px' 
           }}>
-            <h4 style={{ margin: '0 0 15px', fontSize: '16px' }}>Location Information</h4>
+            <h4 style={{ margin: '0 0 15px', fontSize: '16px' }}>
+              {locationType === 'sambar' ? 'Самбар' : 'Шон'} Location Information
+            </h4>
             
             <table style={{ width: '100%', fontSize: '15px', borderCollapse: 'separate', borderSpacing: '0 10px' }}>
               <tbody>
@@ -412,24 +602,24 @@ function Map() {
                 </tr>
               </tbody>
             </table>
-            
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
               <button 
                 onClick={handleSaveLocation}
                 disabled={loading || !locationName.trim()}
                 style={{
                   padding: '10px 20px',
-                  backgroundColor: '#007bff',
+                  backgroundColor: locationType === 'sambar' ? '#FFA500' : '#32CD32',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
                   cursor: loading || !locationName.trim() ? 'not-allowed' : 'pointer',
                   opacity: loading || !locationName.trim() ? '0.7' : '1',
                   fontSize: '16px',
-                  fontWeight: '500'
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                {loading ? 'Saving...' : 'Save Location'}
+                {loading ? 'Saving...' : `Save ${locationType === 'sambar' ? 'Самбар' : 'Шон'}`}
               </button>
               
               {saveStatus.message && (

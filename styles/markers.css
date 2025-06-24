@@ -1,4 +1,4 @@
-.sambar-marker {
+.sambar-marker, .shon-marker {
   width: 260px;
   background-color: white;
   border-radius: 8px;
@@ -11,11 +11,18 @@
 }
 
 .marker-header {
-  background-color: #FFA500;
   padding: 12px 15px;
   color: white;
   display: flex;
   align-items: center;
+}
+
+.sambar-marker .marker-header {
+  background-color: #FFA500; /* Orange for Sambar */
+}
+
+.shon-marker .marker-header {
+  background-color: #32CD32; /* Green for Shon */
 }
 
 .marker-icon {

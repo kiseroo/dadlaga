@@ -6,7 +6,7 @@ import { createMarkerIcon } from '../utils/markerIcon';
 
 const containerStyle = {
   width: '100%', 
-  height: '400px', 
+  height: '500px', 
   position: 'relative',
   border: '1px solid #ccc',
   borderRadius: '4px',
@@ -18,7 +18,15 @@ const defaultCenter = {
   lng: 106.9177
 };
 
-const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange }) => {
+const MapEdit = ({ 
+  initialLocation, 
+  onLocationChange, 
+  sambar, 
+  onKhorooInfoChange, 
+  locationType = 'sambar',
+  allShons = [],
+  activeShonId = null
+}) => {
   const [initialCenter] = useState(() => {
     if (initialLocation) {
       return {
@@ -81,7 +89,6 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
       }
     }
   }, [districtKhoroo]);
-    // Use a memoized callback for map load to prevent unnecessary re-renders
   const handleMapLoad = useCallback(map => {
     mapRef.current = map;
     console.log("Map loaded");
@@ -93,6 +100,50 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
       });
     }
   }, [selectedLocation]);
+
+  const handleMarkerDragEnd = useCallback((event) => {
+    if (event && event.latLng) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      console.log("Marker dragged to:", { lat, lng });
+      
+      onLocationChange({ lat, lng });
+    }
+  }, [onLocationChange]);
+
+  useEffect(() => {
+    if (mapRef.current && allShons && allShons.length > 0 && isLoaded) {
+      const bounds = new window.google.maps.LatLngBounds();
+      
+      if (initialLocation) {
+        bounds.extend({
+          lat: parseFloat(initialLocation.lat),
+          lng: parseFloat(initialLocation.lng)
+        });
+      }
+      
+      allShons.forEach(shon => {
+        bounds.extend({
+          lat: parseFloat(shon.coordinates.lat),
+          lng: parseFloat(shon.coordinates.lng)
+        });
+      });
+      
+      if (allShons.length > 0 || initialLocation) {
+        mapRef.current.fitBounds(bounds);
+        
+        if ((allShons.length === 0 && initialLocation) || 
+            (allShons.length === 1 && !initialLocation)) {
+          const listener = window.google.maps.event.addListenerOnce(mapRef.current, 'bounds_changed', () => {
+            mapRef.current.setZoom(Math.min(15, mapRef.current.getZoom()));
+          });
+          return () => {
+            window.google.maps.event.removeListener(listener);
+          };
+        }
+      }
+    }
+  }, [mapRef, allShons, initialLocation, isLoaded]);
 
   if (!isLoaded) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>Loading Maps...</div>;
@@ -112,21 +163,54 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
           fullscreenControl: true,
           gestureHandling: 'greedy' 
         }}
-      >        {/* Custom Styled Marker */}
+      >        {/* Custom Styled Marker for selected location */}
         {selectedLocation && (
           <Marker
             key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`}
             position={{
               lat: parseFloat(selectedLocation.lat),
               lng: parseFloat(selectedLocation.lng)
-            }}
+            }}            
             title={sambar?.name || "Selected Location"}
             onLoad={(marker) => {
               markerRef.current = marker;
             }}
-            icon={createMarkerIcon(sambar?.name || "Selected", 50)} // Using sambar name in marker
+            icon={createMarkerIcon(sambar?.name || "Selected", 50, locationType)} 
           />
         )}
+        
+        {/* Active marker */}
+        {selectedLocation && (
+          <Marker
+            position={{
+              lat: parseFloat(selectedLocation.lat),
+              lng: parseFloat(selectedLocation.lng)
+            }}
+            draggable={true}
+            onDragEnd={handleMarkerDragEnd}
+            icon={createMarkerIcon(sambar?.name || 'New', 50, locationType)}
+            zIndex={1000} 
+          />
+        )}
+        
+        {/* Display all other shons */}
+        {allShons && allShons.length > 0 && allShons.map(shon => (
+          <Marker
+            key={`shon-${shon._id}`}
+            position={{
+              lat: parseFloat(shon.coordinates.lat),
+              lng: parseFloat(shon.coordinates.lng)
+            }}
+            icon={createMarkerIcon(shon.name, 30, 'shon')}
+            opacity={activeShonId === shon._id ? 0.5 : 1} 
+            zIndex={activeShonId === shon._id ? 999 : 500} 
+            onClick={() => {
+              if (onLocationChange && typeof onLocationChange === 'function') {
+                console.log("Shon marker clicked:", shon);
+              }
+            }}
+          />
+        ))}
         
         {/* KML Layer */}
         {kmlUrl && kmlVisible && (
@@ -136,14 +220,12 @@ const MapEdit = ({ initialLocation, onLocationChange, sambar, onKhorooInfoChange
             options={{
               preserveViewport: true, 
               suppressInfoWindows: true,
-              clickable: true // Make KML layer clickable
+              clickable: true 
             }}
             onLoad={(kmlLayer) => {
               console.log("KML Layer loaded successfully:", kmlUrl);
               kmlLayerRef.current = kmlLayer;
-                // Add click handler to KML layer
               if (kmlLayer) {
-                // Clear existing click listeners to prevent duplicates
                 google.maps.event.clearListeners(kmlLayer, 'click');
                 google.maps.event.addListener(kmlLayer, 'click', handleKmlClick);
                 console.log("KML click handler attached");

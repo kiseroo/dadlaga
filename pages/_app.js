@@ -1,6 +1,8 @@
 import '../styles/globals.css';
 import '../styles/modal.css';
 import '../styles/markers.css';
+import '../styles/shon.css';
+import '../styles/shonModal.css';
 import Head from 'next/head';
 
 export default function App({ Component, pageProps }) {

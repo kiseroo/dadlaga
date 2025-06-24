@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import LocationEditModal from './LocationEditModal';
+import ShonModal from './ShonModal';
 
 
 const KhorooSambarsPanel = () => {
@@ -14,6 +15,7 @@ const KhorooSambarsPanel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [isShonModalOpen, setIsShonModalOpen] = useState(false);
   const [currentSambar, setCurrentSambar] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [sambarToDelete, setSambarToDelete] = useState(null);
@@ -37,7 +39,7 @@ const KhorooSambarsPanel = () => {
     };
     
     fetchDistricts();
-  }, []);  // Add a new useEffect for initial load of all sambars
+  }, []);  
   useEffect(() => {
     const fetchAllSambars = async () => {
       try {
@@ -70,7 +72,6 @@ const KhorooSambarsPanel = () => {
     if (!selectedDistrict) {
       setKhoroos([]);
       setSelectedKhoroo('all');
-      // No longer clearing sambars here, as we want to show all sambars
       const fetchAllSambars = async () => {
         try {
           setLoading(true);
@@ -208,9 +209,18 @@ const KhorooSambarsPanel = () => {
     setCurrentSambar(sambar);
     setIsMapModalOpen(true);
   };
-  
-  const closeMapModal = () => {
+    const closeMapModal = () => {
     setIsMapModalOpen(false);
+    setCurrentSambar(null);
+  };
+  
+  const handleManageShons = (sambar) => {
+    setCurrentSambar(sambar);
+    setIsShonModalOpen(true);
+  };
+  
+  const closeShonModal = () => {
+    setIsShonModalOpen(false);
     setCurrentSambar(null);
   };
   const handleLocationChange = (newLocation) => {
@@ -251,7 +261,6 @@ const KhorooSambarsPanel = () => {
         name: sambar.name
       });
       
-      // Call the API to update the location
       const response = await fetch(`http://localhost:3001/api/sambar/${sambar._id}`, {
         method: 'PUT',
         headers: {
@@ -268,12 +277,10 @@ const KhorooSambarsPanel = () => {
       
       if (data.success) {
         console.log('Update successful, response data:', data.data);
-        // Update the sambar in the local state
         setSambars(sambars.map(s => s._id === sambar._id ? {...s, ...data.data} : s));
         setError('');
         alert('Location updated successfully!');
         
-        // Reload the data to ensure we have the latest from the server
         const refreshResponse = await fetch(`http://localhost:3001/api/sambar`);
         const refreshData = await refreshResponse.json();
         
@@ -293,7 +300,6 @@ const KhorooSambarsPanel = () => {
     }
   };
 
-  // Update filtered sambars whenever sambars or searchTerm changes
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredSambars(sambars);
@@ -308,7 +314,6 @@ const KhorooSambarsPanel = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    // The filtering is handled by the useEffect above
     if (searchTerm.trim() === '') {
       setError('');
     } else if (filteredSambars.length === 0) {
@@ -333,7 +338,6 @@ const KhorooSambarsPanel = () => {
     
     try {
       setLoading(true);
-      // Call the API to delete the sambar
       const response = await fetch(`http://localhost:3001/api/sambar/${sambarToDelete._id}`, {
         method: 'DELETE',
         headers: {
@@ -344,7 +348,6 @@ const KhorooSambarsPanel = () => {
       const data = await response.json();
       
       if (data.success) {
-        // Remove the sambar from the local state
         setSambars(sambars.filter(s => s._id !== sambarToDelete._id));
         setError('');
         alert('Sambar deleted successfully!');
@@ -486,6 +489,15 @@ const KhorooSambarsPanel = () => {
                       onClick={() => handleDelete(sambar)}
                     >
                       Delete
+                    </button>                    <button 
+                      className="shon-button"
+                      onClick={() => handleManageShons(sambar)}
+                      style={{ 
+                        backgroundColor: '#32CD32',
+                        borderColor: '#28a745'
+                      }}
+                    >
+                      Shon
                     </button>
                   </td>
                 </tr>
@@ -515,6 +527,12 @@ const KhorooSambarsPanel = () => {
             </button>
           </div>
         </div>
+      )}      {isShonModalOpen && (
+        <ShonModal
+          isOpen={isShonModalOpen}
+          sambar={currentSambar}
+          onClose={closeShonModal}
+        />
       )}
     </div>
   );

@@ -565,8 +565,7 @@ export default function Main() {
                 >
                     Logout
                 </button>
-            </div>
-              <div className="tabs">
+            </div>            <div className="tabs">
                 <button 
                     className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
                     onClick={() => setActiveTab('dashboard')}
@@ -578,7 +577,8 @@ export default function Main() {
                     onClick={() => setActiveTab('users')}
                 >
                     Manage Users
-                </button>                <button 
+                </button>
+                <button 
                     className={`tab ${activeTab === 'sambars' ? 'active' : ''}`}
                     onClick={() => setActiveTab('sambars')}
                 >

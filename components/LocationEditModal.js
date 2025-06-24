@@ -7,21 +7,19 @@ const LocationEditModal = ({
   onClose, 
   onLocationChange, 
   onKhorooInfoChange, 
-  onUpdate 
+  onUpdate,
+  locationType = 'sambar' 
 }) => {
   const [localSambar, setLocalSambar] = useState(null);
   
-  // When the sambar prop changes, update our local state
   useEffect(() => {
     if (sambar) {
       setLocalSambar(sambar);
     }
   }, [sambar]);
   
-  // Track changes to the sambar through our callback handlers
   useEffect(() => {
     if (localSambar && sambar) {
-      // If coordinates or khorooInfo has been updated, ensure our local state reflects this
       if (
         localSambar.coordinates?.lat !== sambar.coordinates?.lat ||
         localSambar.coordinates?.lng !== sambar.coordinates?.lng ||
@@ -35,32 +33,36 @@ const LocationEditModal = ({
   if (!isOpen || !localSambar) return null;
   
   const handleLocalLocationChange = (newLocation) => {
-    // Update our local state
     setLocalSambar({
       ...localSambar,
       coordinates: newLocation
     });
     
-    // Call the parent's handler
     onLocationChange(newLocation);
   };
   
   const handleLocalKhorooInfoChange = (newKhorooInfo) => {
-    // Update our local state
     setLocalSambar({
       ...localSambar,
       khorooInfo: newKhorooInfo
     });
     
-    // Call the parent's handler
     onKhorooInfoChange(newKhorooInfo);
   };
-  
-  return (
+    return (
     <div className="map-modal-overlay">
       <div className="map-modal-content">
-        <div className="map-modal-header">
-          <h3>Edit Location: {localSambar.name}</h3>
+        <div className="map-modal-header" style={{ 
+          backgroundColor: locationType === 'shon' ? 'rgba(50, 205, 50, 0.1)' : 'rgba(255, 165, 0, 0.1)' 
+        }}>
+          <h3>
+            <i className={`fa fa-${locationType === 'shon' ? 'lightbulb' : 'building'}`} 
+               style={{ 
+                 marginRight: '10px',
+                 color: locationType === 'shon' ? '#32CD32' : '#FFA500'
+               }}></i>
+            Edit {locationType === 'shon' ? 'Shon' : 'Sambar'}: {localSambar.name}
+          </h3>
           <button 
             className="close-modal-button"
             onClick={onClose}
@@ -74,6 +76,7 @@ const LocationEditModal = ({
             onLocationChange={handleLocalLocationChange}
             sambar={localSambar}
             onKhorooInfoChange={handleLocalKhorooInfoChange}
+            locationType={locationType}
           />
           <div className="map-modal-actions">
             <button 
@@ -85,8 +88,12 @@ const LocationEditModal = ({
             <button 
               className="update-button"
               onClick={() => onUpdate(localSambar)}
+              style={{ 
+                backgroundColor: locationType === 'shon' ? '#32CD32' : '#FFA500',
+                borderColor: locationType === 'shon' ? '#28a745' : '#e69500'
+              }}
             >
-              Update Location
+              Update {locationType === 'shon' ? 'Shon' : 'Sambar'}
             </button>
           </div>
         </div>

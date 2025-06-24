@@ -39,13 +39,15 @@ export default function KhorooView() {
           }}>
             Khoroo Sambars
           </h1>
-          
-          <nav style={{ marginBottom: '20px' }}>
+            <nav style={{ marginBottom: '20px' }}>
             <Link href="/" style={commonButtonStyle}>
               Home
             </Link>
             <Link href="/main" style={commonButtonStyle}>
               Map View
+            </Link>
+            <Link href="/shon" style={commonButtonStyle}>
+              Manage Shons
             </Link>
           </nav>
         </header>

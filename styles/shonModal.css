@@ -1,0 +1,68 @@
+/* ShonModal styles */
+.shon-list-panel {
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.shon-map-panel {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.map-action-buttons {
+  background-color: #f5f5f5;
+  border-top: 1px solid #eee;
+}
+
+/* Shon table styles */
+.user-list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.user-list th,
+.user-list td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.user-list th {
+  background-color: rgba(50, 205, 50, 0.1);
+  font-weight: 600;
+}
+
+.user-list tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Make sure action buttons are styled correctly */
+.user-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.edit-button, .delete-button, .add-button {
+  padding: 5px 10px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.edit-button:hover, .add-button:hover {
+  opacity: 0.9;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: white;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
