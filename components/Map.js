@@ -65,7 +65,18 @@ function Map() {
         const shonData = await shonResponse.json();
         
         if (shonData.success) {
-          setShonLocations(shonData.data || []);
+          // Transform shon data to ensure coordinates field exists for compatibility
+          const transformedShons = (shonData.data || []).map(shon => ({
+            ...shon,
+            // Ensure coordinates field exists for compatibility with map rendering
+            coordinates: shon.location ? {
+              lat: shon.location.lat,
+              lng: shon.location.lng
+            } : (shon.coordinates || { lat: 0, lng: 0 }),
+            // Also ensure name field exists (shons use 'code' field)
+            name: shon.code || shon.name || 'Unnamed Shon'
+          }));
+          setShonLocations(transformedShons);
         }
       } catch (error) {
         console.error('Error fetching locations:', error);
