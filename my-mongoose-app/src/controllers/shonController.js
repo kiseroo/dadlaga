@@ -14,16 +14,12 @@ const asyncHandler = (controller, errorMessage) => async (req, res) => {
 };
 
 const getAllShonsController = async (req, res) => {
-    const { district, khoroo } = req.query;
+    const { sambarCode } = req.query;
     
     const filter = {};
     
-    if (district) {
-        filter['khorooInfo.district'] = district;
-    }
-    
-    if (khoroo) {
-        filter['khorooInfo.khoroo'] = khoroo;
+    if (sambarCode) {
+        filter.sambarCode = sambarCode;
     }
     
     const shons = await Shon.find(filter).sort({ createdAt: -1 });
@@ -38,29 +34,24 @@ const getAllShonsController = async (req, res) => {
 const createShonController = async (req, res) => {
     try {
         console.log("Creating shon with data:", req.body);
-        const { name, coordinates, khorooInfo } = req.body;
+        const { sambarCode, code, location } = req.body;
         
-        if (!name || !coordinates || !coordinates.lat || !coordinates.lng) {
-            console.log("Missing required fields:", { name, coordinates });
+        if (!sambarCode || !code || !location || !location.lat || !location.lng) {
+            console.log("Missing required fields:", { sambarCode, code, location });
             return res.status(400).json({
                 success: false,
-                message: 'Name and coordinates are required'
+                message: 'SambarCode, code, and location are required'
             });
         }
         
-        let district = khorooInfo?.district || 'unknown';
-        let khoroo = khorooInfo?.khoroo || 'unknown';
-        const uniqueCode = `SHON-${district}-${khoroo}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-        
-        console.log("Creating new Shon model instance with code:", uniqueCode);
+        console.log("Creating new Shon model instance with code:", code);
         const newShon = new Shon({
-            name,
-            code: uniqueCode,
-            coordinates: {
-                lat: Number(coordinates.lat),
-                lng: Number(coordinates.lng)
-            },
-            khorooInfo
+            sambarCode,
+            code,
+            location: {
+                lat: Number(location.lat),
+                lng: Number(location.lng)
+            }
         });
         
         console.log("Saving shon to database");
@@ -98,7 +89,7 @@ const getShonByIdController = async (req, res) => {
 
 const updateShonController = async (req, res) => {
     const { id } = req.params;
-    const { name, coordinates, khorooInfo } = req.body;
+    const { sambarCode, code, location } = req.body;
     
     const shon = await Shon.findById(id);
     
@@ -110,12 +101,12 @@ const updateShonController = async (req, res) => {
     }
     
     // Update fields
-    if (name) shon.name = name;
-    if (coordinates) {
-        if (coordinates.lat) shon.coordinates.lat = coordinates.lat;
-        if (coordinates.lng) shon.coordinates.lng = coordinates.lng;
+    if (sambarCode) shon.sambarCode = sambarCode;
+    if (code) shon.code = code;
+    if (location) {
+        if (location.lat !== undefined) shon.location.lat = Number(location.lat);
+        if (location.lng !== undefined) shon.location.lng = Number(location.lng);
     }
-    if (khorooInfo) shon.khorooInfo = khorooInfo;
     
     await shon.save();
     
@@ -126,7 +117,8 @@ const updateShonController = async (req, res) => {
     });
 };
 
-const deleteShonController = async (req, res) => {    const { id } = req.params;
+const deleteShonController = async (req, res) => {
+    const { id } = req.params;
     
     const shon = await Shon.findById(id);
     

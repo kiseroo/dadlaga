@@ -1,30 +1,27 @@
 const mongoose = require('mongoose');
 
 const shonSchema = new mongoose.Schema({
-    name: {
-        type: String,
+    sambarCode: {
+        type: String, 
         required: true,
-        trim: true
+        trim: true,
+        ref: 'Khoroo' // Reference to Khoroo model
     },
     code: {
         type: String,
-        unique: true, 
-        sparse: true  
+        required: true,
+        unique: true,
+        trim: true
     },
-    coordinates: {
+    location: {
         lat: {
             type: Number,
-            required: true
+            default: null
         },
         lng: {
             type: Number,
-            required: true
+            default: null
         }
-    },
-    khorooInfo: {
-        name: String,
-        district: String,
-        khoroo: String
     },
     createdAt: {
         type: Date,
@@ -36,6 +33,10 @@ const shonSchema = new mongoose.Schema({
     }
 });
 
+// Create index on code for faster lookups
+shonSchema.index({ code: 1 });
+
+// Pre-save middleware to update the updatedAt field
 shonSchema.pre('save', function(next) {
     this.updatedAt = Date.now();
     next();
