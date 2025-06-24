@@ -74,9 +74,21 @@ const MapEdit = ({
     googleMapsApiKey: "AIzaSyAs_IP5TbdSKKZU27Z7Ur3HAreuJ9xlhJ4",
     libraries: ['geometry']
   });
-    const handleMapClick = useCallback((event) => {
-    console.log("Map clicked, but ignoring - only KML clicks allowed");
-  }, []);
+  const handleMapClick = useCallback((event) => {
+    // Allow map clicks in shon mode to add new shons
+    if (locationType === 'shon' && event.latLng) {
+      const lat = event.latLng.lat();
+      const lng = event.latLng.lng();
+      
+      console.log("Map clicked in shon mode - new shon position:", { lat, lng });
+      
+      if (onLocationChange && typeof onLocationChange === 'function') {
+        onLocationChange({ lat, lng });
+      }
+    } else {
+      console.log("Map clicked, but not in shon mode or no coordinates");
+    }
+  }, [locationType, onLocationChange]);
   
   const handleKmlClick = useCallback((event) => {
     if (event && event.featureData) {
@@ -112,28 +124,55 @@ const MapEdit = ({
   }, [onLocationChange]);
 
   useEffect(() => {
-    if (mapRef.current && allShons && allShons.length > 0 && isLoaded) {
+    if (mapRef.current && isLoaded) {
       const bounds = new window.google.maps.LatLngBounds();
+      let hasValidPoints = false;
       
-      if (initialLocation) {
-        bounds.extend({
-          lat: parseFloat(initialLocation.lat),
-          lng: parseFloat(initialLocation.lng)
+      // For shon mode, only include shons in bounds, not the initial sambar location
+      if (locationType === 'shon' && allShons && allShons.length > 0) {
+        allShons.forEach(shon => {
+          const shonLocation = shon.location || shon.coordinates;
+          
+          if (shonLocation && shonLocation.lat && shonLocation.lng) {
+            bounds.extend({
+              lat: parseFloat(shonLocation.lat),
+              lng: parseFloat(shonLocation.lng)
+            });
+            hasValidPoints = true;
+          }
         });
+      } else {
+        // For other modes (sambar), include initial location
+        if (initialLocation) {
+          bounds.extend({
+            lat: parseFloat(initialLocation.lat),
+            lng: parseFloat(initialLocation.lng)
+          });
+          hasValidPoints = true;
+        }
+        
+        // Also include shons if available
+        if (allShons && allShons.length > 0) {
+          allShons.forEach(shon => {
+            const shonLocation = shon.location || shon.coordinates;
+            
+            if (shonLocation && shonLocation.lat && shonLocation.lng) {
+              bounds.extend({
+                lat: parseFloat(shonLocation.lat),
+                lng: parseFloat(shonLocation.lng)
+              });
+              hasValidPoints = true;
+            }
+          });
+        }
       }
       
-      allShons.forEach(shon => {
-        bounds.extend({
-          lat: parseFloat(shon.coordinates.lat),
-          lng: parseFloat(shon.coordinates.lng)
-        });
-      });
-      
-      if (allShons.length > 0 || initialLocation) {
+      if (hasValidPoints) {
         mapRef.current.fitBounds(bounds);
         
-        if ((allShons.length === 0 && initialLocation) || 
-            (allShons.length === 1 && !initialLocation)) {
+        // If only one point or in shon mode with limited points, set appropriate zoom
+        if ((locationType === 'shon' && allShons && allShons.length === 1) || 
+            (locationType !== 'shon' && allShons && allShons.length === 0 && initialLocation)) {
           const listener = window.google.maps.event.addListenerOnce(mapRef.current, 'bounds_changed', () => {
             mapRef.current.setZoom(Math.min(15, mapRef.current.getZoom()));
           });
@@ -141,9 +180,16 @@ const MapEdit = ({
             window.google.maps.event.removeListener(listener);
           };
         }
+      } else if (initialLocation) {
+        // Fallback to initial location if no valid points
+        mapRef.current.setCenter({
+          lat: parseFloat(initialLocation.lat),
+          lng: parseFloat(initialLocation.lng)
+        });
+        mapRef.current.setZoom(15);
       }
     }
-  }, [mapRef, allShons, initialLocation, isLoaded]);
+  }, [mapRef, allShons, initialLocation, isLoaded, locationType]);
 
   if (!isLoaded) {
     return <div style={{ padding: '20px', textAlign: 'center' }}>Loading Maps...</div>;
@@ -163,8 +209,8 @@ const MapEdit = ({
           fullscreenControl: true,
           gestureHandling: 'greedy' 
         }}
-      >        {/* Custom Styled Marker for selected location */}
-        {selectedLocation && (
+      >        {/* Custom Styled Marker for selected location - only show if not in shon mode or if editing a specific shon */}
+        {selectedLocation && locationType !== 'shon' && (
           <Marker
             key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`}
             position={{
@@ -179,8 +225,8 @@ const MapEdit = ({
           />
         )}
         
-        {/* Active marker */}
-        {selectedLocation && (
+        {/* Active marker - only show when editing specific shon or when not in shon mode */}
+        {selectedLocation && (locationType !== 'shon' || activeShonId) && (
           <Marker
             position={{
               lat: parseFloat(selectedLocation.lat),
@@ -194,23 +240,33 @@ const MapEdit = ({
         )}
         
         {/* Display all other shons */}
-        {allShons && allShons.length > 0 && allShons.map(shon => (
-          <Marker
-            key={`shon-${shon._id}`}
-            position={{
-              lat: parseFloat(shon.coordinates.lat),
-              lng: parseFloat(shon.coordinates.lng)
-            }}
-            icon={createMarkerIcon(shon.name, 30, 'shon')}
-            opacity={activeShonId === shon._id ? 0.5 : 1} 
-            zIndex={activeShonId === shon._id ? 999 : 500} 
-            onClick={() => {
-              if (onLocationChange && typeof onLocationChange === 'function') {
-                console.log("Shon marker clicked:", shon);
-              }
-            }}
-          />
-        ))}
+        {allShons && allShons.length > 0 && allShons.map(shon => {
+          // Handle both 'location' (from backend) and 'coordinates' (legacy) fields
+          const shonLocation = shon.location || shon.coordinates;
+          
+          if (!shonLocation || !shonLocation.lat || !shonLocation.lng) {
+            console.warn('Shon missing location data:', shon);
+            return null;
+          }
+          
+          return (
+            <Marker
+              key={`shon-${shon._id}`}
+              position={{
+                lat: parseFloat(shonLocation.lat),
+                lng: parseFloat(shonLocation.lng)
+              }}
+              icon={createMarkerIcon(shon.code || shon.name || 'Shon', 30, 'shon')}
+              opacity={activeShonId === shon._id ? 0.5 : 1} 
+              zIndex={activeShonId === shon._id ? 999 : 500} 
+              onClick={() => {
+                if (onLocationChange && typeof onLocationChange === 'function') {
+                  console.log("Shon marker clicked:", shon);
+                }
+              }}
+            />
+          );
+        })}
         
         {/* KML Layer */}
         {kmlUrl && kmlVisible && (

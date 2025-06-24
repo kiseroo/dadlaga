@@ -22,7 +22,7 @@ function Map() {
   const [errorMessage, setErrorMessage] = useState("");  
   const [sambarLocations, setSambarLocations] = useState([]);
   const [shonLocations, setShonLocations] = useState([]);
-  const [locationType, setLocationType] = useState('sambar'); // For saving new locations
+  const [locationType, setLocationType] = useState('sambar'); // Only allow sambar creation on main map
   
   // Add filter states
   const [showSambars, setShowSambars] = useState(true);
@@ -285,10 +285,9 @@ function Map() {
         setLoading(false);
         return;
       }
-        console.log(`Saving ${locationType} with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
+      console.log(`Saving sambar with name: ${locationName}, khorooInfo:`, savedKhorooInfo);
       
-      const endpoint = locationType === 'sambar' ? 'sambar' : 'shon';
-      const response = await fetch(`http://localhost:3001/api/${endpoint}`, {
+      const response = await fetch(`http://localhost:3001/api/sambar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -304,17 +303,13 @@ function Map() {
       
       if (data.success) {
         setSaveStatus({
-          message: 'Location saved!',
+          message: 'Sambar saved!',
           isError: false
         });
         setLocationName('');
         
-        // Update the appropriate state array
-        if (locationType === 'sambar') {
-          setSambarLocations(prev => [...prev, data.data]);
-        } else {
-          setShonLocations(prev => [...prev, data.data]);
-        }
+        // Update sambar locations
+        setSambarLocations(prev => [...prev, data.data]);
       } else {
         setSaveStatus({
           message: data.message || 'Failed to save location',
@@ -391,16 +386,15 @@ function Map() {
           <p style={{ margin: '0 0 8px', fontSize: '15px', fontWeight: '500' }}>Add New Location Type:</p>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
-              onClick={() => setLocationType('sambar')}
               style={{
                 flex: 1,
                 padding: '10px 8px',
-                backgroundColor: locationType === 'sambar' ? '#FFA500' : '#f8f9fa',
-                color: locationType === 'sambar' ? 'white' : '#333',
+                backgroundColor: '#FFA500',
+                color: 'white',
                 border: '1px solid #ddd',
                 borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: locationType === 'sambar' ? '500' : 'normal',
+                cursor: 'default',
+                fontWeight: '500',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -410,27 +404,15 @@ function Map() {
               <i className="fa fa-building" style={{ marginRight: '8px' }}></i>
               Самбар
             </button>
-            <button
-              onClick={() => setLocationType('shon')}
-              style={{
-                flex: 1,
-                padding: '10px 8px',
-                backgroundColor: locationType === 'shon' ? '#32CD32' : '#f8f9fa',
-                color: locationType === 'shon' ? 'white' : '#333',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: locationType === 'shon' ? '500' : 'normal',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              <i className="fa fa-lightbulb" style={{ marginRight: '8px' }}></i>
-              Шон
-            </button>
           </div>
+          <p style={{ 
+            fontSize: '12px', 
+            color: '#666', 
+            margin: '8px 0 0 0',
+            fontStyle: 'italic'
+          }}>
+            Note: To add Shons, click the "Шон" button on an existing Sambar marker
+          </p>
         </div>
           {/* Location Stats Display */}
         <div style={{ 
