@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, KmlLayer, InfoWindow } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, KmlLayer, InfoWindow, Polyline } from '@react-google-maps/api';
 import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 import { createMarkerIcon, createAdvancedMarker } from '../utils/markerIcon';
@@ -27,6 +27,10 @@ function Map() {
   // Add filter states
   const [showSambars, setShowSambars] = useState(true);
   const [showShons, setShowShons] = useState(true);
+  const [showLines, setShowLines] = useState(true);
+  
+  // Line state
+  const [allLines, setAllLines] = useState([]);
   
   const mapRef = useRef(null);
   const kmlLayerRef = useRef(null);
@@ -77,6 +81,18 @@ function Map() {
             name: shon.code || shon.name || 'Unnamed Shon'
           }));
           setShonLocations(transformedShons);
+        }
+
+        // Fetch all lines
+        try {
+          const linesResponse = await fetch(`http://localhost:3001/api/lines`);
+          const linesData = await linesResponse.json();
+          
+          if (linesData.success) {
+            setAllLines(linesData.data || []);
+          }
+        } catch (lineError) {
+          console.error('Error fetching lines:', lineError);
         }
       } catch (error) {
         console.error('Error fetching locations:', error);
@@ -378,6 +394,20 @@ function Map() {
             }}
           />
         )}
+
+        {/* Render lines when showLines is true */}
+        {showLines && allLines.map((line, index) => (
+          <Polyline
+            key={line._id || index}
+            path={line.coordinates}
+            options={{
+              strokeColor: '#DC143C', // Dark red color
+              strokeOpacity: 0.8,
+              strokeWeight: 3,
+              clickable: false
+            }}
+          />
+        ))}
       </GoogleMap>
       
       {/* overlay */}      <div style={{
@@ -478,6 +508,29 @@ function Map() {
             <span>{shonLocations.length}</span>
             <div style={{ marginTop: '5px', fontSize: '12px' }}>
               {showShons ? 'Showing' : 'Hidden'}
+            </div>
+          </div>
+          <div 
+            onClick={() => setShowLines(!showLines)}
+            style={{ 
+              flex: 1, 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              padding: '8px',
+              backgroundColor: showLines ? 'rgba(70, 130, 180, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+              borderRadius: '4px',
+              border: showLines ? '1px solid rgba(70, 130, 180, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              opacity: showLines ? 1 : 0.6,
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <i className="fa fa-connectdevelop" style={{ color: '#4682B4', fontSize: '18px', marginBottom: '5px' }}></i>
+            <span style={{ fontWeight: '500' }}>Шугам</span>
+            <span>{allLines.length}</span>
+            <div style={{ marginTop: '5px', fontSize: '12px' }}>
+              {showLines ? 'Showing' : 'Hidden'}
             </div>
           </div>
         </div>
