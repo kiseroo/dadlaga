@@ -1,5 +1,5 @@
-$mongooseApp = Start-Process powershell -ArgumentList "-Command cd C:\temuulen\dadlaga\my-mongoose-app && npm run start" -PassThru
-$nextApp = Start-Process powershell -ArgumentList "-Command cd C:\temuulen\dadlaga && npm run dev" -PassThru
+$mongooseApp = Start-Process powershell -ArgumentList "-Command cd C:\Users\user\dadlaga\my-mongoose-app && npm run start" -PassThru
+$nextApp = Start-Process powershell -ArgumentList "-Command cd C:\Users\user\dadlaga && npm run dev" -PassThru
 
 Write-Host "MongoDB Mongoose server started on port 3001"
 Write-Host "Next.js frontend started on port 3000"

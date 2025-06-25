@@ -1,12 +1,12 @@
 {
   "name": "dadlaga",
-  "version": "1.0.0",
-  "scripts": {
+  "version": "1.0.0",  "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "server": "node server.js",
-    "mongoose-server": "node my-mongoose-app/src/app.js"
+    "mongoose-server": "node my-mongoose-app/src/app.js",
+    "seedsample": "cd my-mongoose-app && npm run seedsample"
   },
   "dependencies": {
     "@googlemaps/markerclusterer": "^2.5.3",

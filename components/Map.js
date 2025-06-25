@@ -67,8 +67,9 @@ function Map() {
   
   // Add filter states
   const [showSambars, setShowSambars] = useState(true);
-  const [showShons, setShowShons] = useState(true);
-  const [showLines, setShowLines] = useState(true);
+  const [showShons, setShowShons] = useState(false); // Initially hide shons
+  const [showLines, setShowLines] = useState(false); // Initially hide lines
+  const [selectedSambarId, setSelectedSambarId] = useState(null); // Track selected sambar
   
   // Line state
   const [allLines, setAllLines] = useState([]);
@@ -164,16 +165,22 @@ function Map() {
 
     // store info windows
     const infoWindows = [];
-    
-    const sambarMarkers = showSambars ? sambarLocations
-      .filter(location => location && location.coordinates && location.coordinates.lat && location.coordinates.lng)
+      const sambarMarkers = showSambars ? sambarLocations
+      .filter(location => 
+        location && 
+        location.coordinates && 
+        location.coordinates.lat && 
+        location.coordinates.lng &&
+        // If a sambar is selected, only show that one, otherwise show all
+        (!selectedSambarId || location._id === selectedSambarId)
+      )
       .map((location) => {
       const marker = new google.maps.Marker({
         position: {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: createMarkerIcon(location.name || 'Unnamed', 40, 'sambar'),
+        icon: createMarkerIcon(location.name || 'Unnamed', 40, 'sambar', selectedSambarId === location._id),
         title: location.name,
         map: null
       });
@@ -229,13 +236,50 @@ function Map() {
         });
         
         setActiveInfoWindow(infoWindow);
+        
+        // Toggle shons and lines related to this sambar
+        const sambarId = location._id;
+        console.log('Sambar clicked:', sambarId);
+        console.log('Current selectedSambarId:', selectedSambarId);
+        console.log('Related shons:', shonLocations.filter(shon => 
+          shon.sambarCode === sambarId || 
+          shon.sambarId === sambarId
+        ));
+        console.log('Related lines:', allLines.filter(line => 
+          line.sambarCode === sambarId || 
+          line.sambarId === sambarId
+        ));
+          if (selectedSambarId === sambarId) {
+          // If clicking the same sambar again, show all sambars and hide shons/lines
+          setShowShons(false);
+          setShowLines(false);
+          setSelectedSambarId(null);
+        } else {
+          // Show only this sambar and its related shons and lines
+          setShowShons(true);
+          setShowLines(true);
+          setSelectedSambarId(sambarId);
+        }
       });
       
       return marker;
-    }) : []; 
-    
-    const shonMarkers = showShons ? shonLocations
-      .filter(location => location && location.coordinates && location.coordinates.lat && location.coordinates.lng)
+    }) : [];      const shonMarkers = showShons ? shonLocations
+      .filter(location => 
+        location && 
+        location.coordinates && 
+        location.coordinates.lat && 
+        location.coordinates.lng && 
+        // Only show shons related to the selected sambar if one is selected
+        (!selectedSambarId || 
+          (selectedSambarId && (
+            // Try different ways to match the relationship
+            location.sambarCode === selectedSambarId || 
+            location.sambarId === selectedSambarId ||
+            // Find the sambar by ID and match with its name
+            (sambarLocations.find(s => s._id === selectedSambarId)?.name === location.sambarCode)
+          ))
+        )
+      )
       .map((location) => {
       const marker = new google.maps.Marker({
         position: {
@@ -307,17 +351,21 @@ function Map() {
       });
       
       return marker;
-    }) : []; 
-
-    const allMarkers = [...sambarMarkers, ...shonMarkers];
+    }) : [];     const allMarkers = [...sambarMarkers, ...shonMarkers];
     markersRef.current = allMarkers;
     
-    markerClustererRef.current = new MarkerClusterer({
-      map: mapRef.current,
-      markers: allMarkers,
-      gridSize: 60,
-      maxZoom: 15 
-    });
+    // Only use clusterer when no sambar is selected (to avoid clustering the single sambar with its shons)
+    if (!selectedSambarId) {
+      markerClustererRef.current = new MarkerClusterer({
+        map: mapRef.current,
+        markers: allMarkers,
+        gridSize: 60,
+        maxZoom: 15 
+      });
+    } else {
+      // When a sambar is selected, just add all markers to the map directly
+      allMarkers.forEach(marker => marker.setMap(mapRef.current));
+    }
 
     return () => {
       if (markerClustererRef.current) {
@@ -330,7 +378,48 @@ function Map() {
         marker.setMap(null);
       });
     };
-  }, [sambarLocations, shonLocations, isLoaded, showSambars, showShons]);
+  }, [sambarLocations, shonLocations, isLoaded, showSambars, showShons, showLines, selectedSambarId]);
+  // useEffect for filtering shons and lines based on selected sambar
+  useEffect(() => {
+    // If no sambar is selected, keep all items hidden
+    if (!selectedSambarId) {
+      setShowShons(false);
+      setShowLines(false);
+      return;
+    }
+    
+    // Find the selected sambar to get its code/name
+    const selectedSambar = sambarLocations.find(sambar => sambar._id === selectedSambarId);
+    if (!selectedSambar) {
+      console.log('Selected sambar not found in sambarLocations array:', selectedSambarId);
+      return;
+    }
+    
+    const sambarName = selectedSambar.name;
+    console.log('Selected sambar name:', sambarName);
+    
+    // Filter shons related to the selected sambar (using sambarCode which might be the name)
+    const relatedShons = shonLocations.filter(shon => 
+      shon.sambarCode === sambarName || 
+      shon.sambarCode === selectedSambarId ||
+      shon.sambarId === selectedSambarId
+    );
+    console.log('Found related shons:', relatedShons.length);
+    
+    // Filter lines related to the selected sambar
+    const relatedLines = allLines.filter(line => 
+      line.sambarCode === sambarName ||
+      line.sambarCode === selectedSambarId ||
+      line.sambarId === selectedSambarId
+    );
+    console.log('Found related lines:', relatedLines.length);
+    
+    // If there are related items, show them
+    if (relatedShons.length > 0 || relatedLines.length > 0) {
+      setShowShons(true);
+      setShowLines(true);
+    }
+  }, [selectedSambarId, shonLocations, allLines]);
 
   const handleMapClick = (event) => {
     if (!kmlUrl) {
@@ -443,10 +532,16 @@ function Map() {
               }
             }}
           />
-        )}
-
-        {/* Render lines when showLines is true */}
-        {showLines && allLines.map((line, index) => (
+        )}        {/* Render lines when showLines is true and filtered by selectedSambarId */}
+        {showLines && allLines
+          .filter(line => 
+            !selectedSambarId || 
+            line.sambarCode === selectedSambarId || 
+            line.sambarId === selectedSambarId ||
+            // Find the sambar by ID and match with its name
+            (selectedSambarId && sambarLocations.find(s => s._id === selectedSambarId)?.name === line.sambarCode)
+          )
+          .map((line, index) => (
           <Polyline
             key={line._id || index}
             path={line.coordinates}
@@ -513,9 +608,16 @@ function Map() {
           padding: '10px', 
           backgroundColor: '#f8f9fa',
           borderRadius: '4px'
-        }}>
-          <div 
-            onClick={() => setShowSambars(!showSambars)}
+        }}>          <div 
+            onClick={() => {
+              // If a sambar is selected, clicking this will clear the selection
+              if (selectedSambarId) {
+                setSelectedSambarId(null);
+              } else {
+                // Toggle all sambars visibility
+                setShowSambars(!showSambars);
+              }
+            }}
             style={{ 
               flex: 1, 
               display: 'flex', 
@@ -530,14 +632,12 @@ function Map() {
               transition: 'all 0.2s ease'
             }}
           >
-            <i className="fa fa-building" style={{ color: '#FFA500', fontSize: '18px', marginBottom: '5px' }}></i>
-            <span style={{ fontWeight: '500' }}>Самбар</span>
-            <span>{sambarLocations.length}</span>
+            <i className="fa fa-building" style={{ color: '#FFA500', fontSize: '18px', marginBottom: '5px' }}></i>            <span style={{ fontWeight: '500' }}>Самбар</span>
+            <span>{selectedSambarId ? '1 / ' + sambarLocations.length : sambarLocations.length}</span>
             <div style={{ marginTop: '5px', fontSize: '12px' }}>
-              {showSambars ? 'Showing' : 'Hidden'}
+              {selectedSambarId ? 'Selected Only' : (showSambars ? 'Showing All' : 'Hidden')}
             </div>
-          </div>
-          <div 
+          </div>          <div 
             onClick={() => setShowShons(!showShons)}
             style={{ 
               flex: 1, 
@@ -548,16 +648,23 @@ function Map() {
               backgroundColor: showShons ? 'rgba(50, 205, 50, 0.1)' : 'rgba(0, 0, 0, 0.05)',
               borderRadius: '4px',
               border: showShons ? '1px solid rgba(50, 205, 50, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
-              cursor: 'pointer',
-              opacity: showShons ? 1 : 0.6,
+              cursor: selectedSambarId ? 'pointer' : 'not-allowed',
+              opacity: selectedSambarId ? (showShons ? 1 : 0.6) : 0.4,
               transition: 'all 0.2s ease'
             }}
           >
             <i className="fa fa-lightbulb" style={{ color: '#32CD32', fontSize: '18px', marginBottom: '5px' }}></i>
-            <span style={{ fontWeight: '500' }}>Шон</span>
-            <span>{shonLocations.length}</span>
+            <span style={{ fontWeight: '500' }}>Шон</span>            <span>
+              {selectedSambarId 
+                ? shonLocations.filter(shon => 
+                    shon.sambarCode === selectedSambarId || 
+                    shon.sambarId === selectedSambarId ||
+                    (sambarLocations.find(s => s._id === selectedSambarId)?.name === shon.sambarCode)
+                  ).length
+                : shonLocations.length}
+            </span>
             <div style={{ marginTop: '5px', fontSize: '12px' }}>
-              {showShons ? 'Showing' : 'Hidden'}
+              {selectedSambarId ? (showShons ? 'Showing' : 'Hidden') : 'Select Sambar'}
             </div>
           </div>
           <div 
@@ -571,16 +678,23 @@ function Map() {
               backgroundColor: showLines ? 'rgba(70, 130, 180, 0.1)' : 'rgba(0, 0, 0, 0.05)',
               borderRadius: '4px',
               border: showLines ? '1px solid rgba(70, 130, 180, 0.3)' : '1px solid rgba(0, 0, 0, 0.1)',
-              cursor: 'pointer',
-              opacity: showLines ? 1 : 0.6,
+              cursor: selectedSambarId ? 'pointer' : 'not-allowed',
+              opacity: selectedSambarId ? (showLines ? 1 : 0.6) : 0.4,
               transition: 'all 0.2s ease'
             }}
           >
             <i className="fa fa-connectdevelop" style={{ color: '#4682B4', fontSize: '18px', marginBottom: '5px' }}></i>
-            <span style={{ fontWeight: '500' }}>Шугам</span>
-            <span>{allLines.length}</span>
+            <span style={{ fontWeight: '500' }}>Шугам</span>            <span>
+              {selectedSambarId 
+                ? allLines.filter(line => 
+                    line.sambarCode === selectedSambarId || 
+                    line.sambarId === selectedSambarId ||
+                    (sambarLocations.find(s => s._id === selectedSambarId)?.name === line.sambarCode)
+                  ).length
+                : allLines.length}
+            </span>
             <div style={{ marginTop: '5px', fontSize: '12px' }}>
-              {showLines ? 'Showing' : 'Hidden'}
+              {selectedSambarId ? (showLines ? 'Showing' : 'Hidden') : 'Select Sambar'}
             </div>
           </div>
         </div>
