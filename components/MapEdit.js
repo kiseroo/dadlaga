@@ -4,6 +4,47 @@ import { useJsApiLoader } from '@react-google-maps/api';
 import useDistrictKhoroo from '../hooks/useDistrictKhoroo';
 import { createMarkerIcon } from '../utils/markerIcon';
 
+// Helper function to generate shon marker SVG based on color and shape
+const generateShonMarkerSVG = (name, color = 'green', shape = 'one-line') => {
+  const colorMap = {
+    'green': '#32CD32',
+    'red': '#FF0000',
+    'yellow': '#FFD700'
+  };
+  
+  const pinColor = colorMap[color] || '#32CD32';
+  
+  // Generate lines based on shape - made shorter and use pin color
+  let lines = '';
+  if (shape === 'one-line') {
+    lines = `<line x1="20" y1="22" x2="20" y2="30" stroke="${pinColor}" stroke-width="2"/>`;
+  } else if (shape === 'two-lines') {
+    lines = `
+      <line x1="17" y1="22" x2="17" y2="30" stroke="${pinColor}" stroke-width="2"/>
+      <line x1="23" y1="22" x2="23" y2="30" stroke="${pinColor}" stroke-width="2"/>
+    `;
+  } else if (shape === 'three-lines') {
+    lines = `
+      <line x1="17" y1="22" x2="17" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+      <line x1="20" y1="22" x2="20" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+      <line x1="23" y1="22" x2="23" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+    `;
+  }
+  
+  return `
+    <svg width="40" height="42" viewBox="0 0 40 42" xmlns="http://www.w3.org/2000/svg">
+      <!-- White label background -->
+      <rect x="1" y="1" width="38" height="16" fill="white" stroke="#ddd" stroke-width="1"/>
+      <!-- Shon name text -->
+      <text x="20" y="11" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#333">${(name || 'Shon').substring(0, 10)}</text>
+      <!-- Pin shape -->
+      <path d="M20 18C15.582 18 12 21.582 12 26c0 5.25 8 16 8 16s8-10.75 8-16c0-4.418-3.582-8-8-8z" fill="${pinColor}"/>
+      <circle cx="20" cy="26" r="6" fill="white"/>
+      ${lines}
+    </svg>
+  `;
+};
+
 const containerStyle = {
   width: '100%', 
   height: '500px', 
@@ -85,27 +126,27 @@ const MapEdit = ({
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
       
-      console.log("Map clicked - position:", { lat, lng });
-      console.log("isDrawingLine:", isDrawingLine);
-      console.log("onLineClick function exists:", typeof onLineClick === 'function');
-      
-      // If we're in line drawing mode, handle the line click
+      // Priority 1: If we're in line drawing mode, add inflection point
       if (isDrawingLine && onLineClick && typeof onLineClick === 'function') {
-        console.log("Calling onLineClick with coordinates:", { lat, lng });
+        console.log("Adding inflection point at:", { lat, lng });
         onLineClick({ lat, lng });
-        return;
+        return; // Stop here - don't handle any other clicks
       }
       
-      // Otherwise, handle normal location change
-      if (onLocationChange && typeof onLocationChange === 'function') {
+      // Priority 2: Handle normal location changes (only if NOT drawing line)
+      if (!isDrawingLine && onLocationChange && typeof onLocationChange === 'function') {
         onLocationChange({ lat, lng });
       }
-    } else {
-      console.log("Map clicked, but no coordinates available");
     }
   }, [onLocationChange, isDrawingLine, onLineClick]);
   
   const handleKmlClick = useCallback((event) => {
+    // Don't handle KML clicks during line drawing mode
+    if (isDrawingLine) {
+      console.log("KML click ignored - in line drawing mode");
+      return;
+    }
+    
     if (event && event.featureData) {
       console.log("KML feature clicked:", event.featureData);
       
@@ -115,7 +156,7 @@ const MapEdit = ({
         console.log("New marker position set from KML click");
       }
     }
-  }, [districtKhoroo]);
+  }, [districtKhoroo, isDrawingLine]);
   const handleMapLoad = useCallback(map => {
     mapRef.current = map;
     console.log("Map loaded");
@@ -129,14 +170,14 @@ const MapEdit = ({
   }, [selectedLocation]);
 
   const handleMarkerDragEnd = useCallback((event) => {
-    if (event && event.latLng) {
+    if (event && event.latLng && !isDrawingLine) { // Don't handle marker drag during line drawing
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
       console.log("Marker dragged to:", { lat, lng });
       
       onLocationChange({ lat, lng });
     }
-  }, [onLocationChange]);
+  }, [onLocationChange, isDrawingLine]);
 
   useEffect(() => {
     if (mapRef.current && isLoaded) {
@@ -211,7 +252,9 @@ const MapEdit = ({
   }
   
   return (
-    <div className="map-edit-container" style={{ position: 'relative', width: '100%', marginBottom: '20px' }}>      <GoogleMap
+    <div className="map-edit-container" style={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
+      
+      <GoogleMap
         mapContainerStyle={containerStyle}
         center={initialCenter} 
         zoom={15}
@@ -222,10 +265,12 @@ const MapEdit = ({
           streetViewControl: false,
           mapTypeControl: true,
           fullscreenControl: true,
-          gestureHandling: 'greedy' 
+          gestureHandling: 'greedy',
+          disableDefaultUI: false,
+          clickableIcons: false // Prevent interference from map icons
         }}
-      >        {/* Custom Styled Marker for selected location - only show if not in shon mode or if editing a specific shon */}
-        {selectedLocation && locationType !== 'shon' && (
+      >        {/* Custom Styled Marker for selected location - only show if not in shon mode or if editing a specific shon, and NOT drawing a line */}
+        {selectedLocation && locationType !== 'shon' && !isDrawingLine && (
           <Marker
             key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`}
             position={{
@@ -240,8 +285,8 @@ const MapEdit = ({
           />
         )}
         
-        {/* Active marker - only show when editing specific shon or when not in shon mode */}
-        {selectedLocation && (locationType !== 'shon' || activeShonId) && (
+        {/* Active marker - only show when editing specific shon or when not in shon mode, and NOT drawing a line */}
+        {selectedLocation && (locationType !== 'shon' || activeShonId) && !isDrawingLine && (
           <Marker
             position={{
               lat: parseFloat(selectedLocation.lat),
@@ -271,7 +316,13 @@ const MapEdit = ({
                 lat: parseFloat(shonLocation.lat),
                 lng: parseFloat(shonLocation.lng)
               }}
-              icon={createMarkerIcon(shon.code || shon.name || 'Shon', 30, 'shon')}
+              icon={{
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                  generateShonMarkerSVG(shon.code || shon.name, shon.color, shon.shape)
+                ),
+                scaledSize: new google.maps.Size(40, 42),
+                anchor: new google.maps.Point(20, 42)
+              }}
               opacity={activeShonId === shon._id ? 0.5 : 1} 
               zIndex={activeShonId === shon._id ? 999 : (selectedShons.includes(shon._id) ? 800 : 500)} 
               onClick={() => {
@@ -423,15 +474,18 @@ const MapEdit = ({
             options={{
               preserveViewport: true, 
               suppressInfoWindows: true,
-              clickable: true 
+              clickable: !isDrawingLine // Disable KML clicks during line drawing
             }}
             onLoad={(kmlLayer) => {
               console.log("KML Layer loaded successfully:", kmlUrl);
               kmlLayerRef.current = kmlLayer;
               if (kmlLayer) {
                 google.maps.event.clearListeners(kmlLayer, 'click');
-                google.maps.event.addListener(kmlLayer, 'click', handleKmlClick);
-                console.log("KML click handler attached");
+                // Only add click handler if not in line drawing mode
+                if (!isDrawingLine) {
+                  google.maps.event.addListener(kmlLayer, 'click', handleKmlClick);
+                  console.log("KML click handler attached");
+                }
               }
             }}
             onError={(error) => {

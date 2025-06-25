@@ -1,8 +1,5 @@
 import { useState, useCallback } from 'react';
 
-/**
- * Custom hook for managing line drawing operations
- */
 const useLineDrawing = () => {
   const [lines, setLines] = useState([]);
   const [currentLine, setCurrentLine] = useState(null);
@@ -11,7 +8,6 @@ const useLineDrawing = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Fetch lines for a sambar
   const fetchLines = useCallback(async (sambarCode) => {
     try {
       setLoading(true);
@@ -31,7 +27,7 @@ const useLineDrawing = () => {
     }
   }, []);
 
-  // Start drawing a line between selected shons
+  // drawing a line between selected shons
   const startDrawingLine = useCallback((shons, sambar) => {
     if (selectedShons.length < 2) {
       setError('Please select at least 2 shons to connect with a line');
@@ -61,17 +57,25 @@ const useLineDrawing = () => {
     return true;
   }, [selectedShons]);
 
-  // Add inflection point to current line
   const addInflectionPoint = useCallback((coordinates) => {
-    if (!isDrawingLine || !currentLine) return;
+    if (!isDrawingLine || !currentLine) {
+      console.log('Cannot add inflection point - not in drawing mode');
+      return;
+    }
     
-    setCurrentLine(prev => ({
-      ...prev,
-      coordinates: [...prev.coordinates, { lat: coordinates.lat, lng: coordinates.lng }]
-    }));
+    console.log('Adding inflection point at:', coordinates);
+    
+    setCurrentLine(prev => {
+      const newCoordinates = [...prev.coordinates, { lat: coordinates.lat, lng: coordinates.lng }];
+      const newLine = {
+        ...prev,
+        coordinates: newCoordinates
+      };
+      console.log('Line updated with', newCoordinates.length, 'points');
+      return newLine;
+    });
   }, [isDrawingLine, currentLine]);
 
-  // Save the current line
   const saveLine = useCallback(async (shons) => {
     if (!currentLine) {
       setError('No line to save');
@@ -131,7 +135,6 @@ const useLineDrawing = () => {
     }
   }, [currentLine]);
 
-  // Cancel line drawing
   const cancelDrawing = useCallback(() => {
     setCurrentLine(null);
     setIsDrawingLine(false);
@@ -139,7 +142,6 @@ const useLineDrawing = () => {
     setError('');
   }, []);
 
-  // Select/deselect shons for line drawing
   const toggleShonSelection = useCallback((shonId) => {
     if (isDrawingLine) return;
     
@@ -181,7 +183,6 @@ const useLineDrawing = () => {
     }
   }, []);
 
-  // Simplify a line (remove redundant points)
   const simplifyLine = useCallback(async (lineId, tolerance = 10) => {
     try {
       setLoading(true);
@@ -214,7 +215,6 @@ const useLineDrawing = () => {
     }
   }, []);
 
-  // Get lines for a specific shon
   const getLinesForShon = useCallback(async (shonId) => {
     try {
       const response = await fetch(`http://localhost:3001/api/lines/shon/${shonId}`);
@@ -233,12 +233,10 @@ const useLineDrawing = () => {
     }
   }, []);
 
-  // Clear error
   const clearError = useCallback(() => {
     setError('');
   }, []);
 
-  // Reset all state
   const reset = useCallback(() => {
     setLines([]);
     setCurrentLine(null);
@@ -249,7 +247,6 @@ const useLineDrawing = () => {
   }, []);
 
   return {
-    // State
     lines,
     currentLine,
     isDrawingLine,
@@ -257,7 +254,6 @@ const useLineDrawing = () => {
     loading,
     error,
     
-    // Actions
     fetchLines,
     startDrawingLine,
     addInflectionPoint,

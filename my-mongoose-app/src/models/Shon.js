@@ -23,6 +23,16 @@ const shonSchema = new mongoose.Schema({
             default: null
         }
     },
+    color: {
+        type: String,
+        enum: ['green', 'red', 'yellow'],
+        default: 'green'
+    },
+    shape: {
+        type: String,
+        enum: ['one-line', 'two-lines', 'three-lines'],
+        default: 'one-line'
+    },
     createdAt: {
         type: Date,
         default: Date.now

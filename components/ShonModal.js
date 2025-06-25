@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import MapEdit from './MapEdit';
-import LineManagementPanel from './LineManagementPanel';
-import useLineDrawing from '../hooks/useLineDrawing';
 
 const ShonModal = ({ isOpen, onClose, sambar }) => {
   // Shon-related state
@@ -15,35 +13,15 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
   const [shonToDelete, setShonToDelete] = useState(null);
   const [activeShon, setActiveShon] = useState(null);
 
-  // Line drawing hook
-  const {
-    lines,
-    currentLine,
-    isDrawingLine,
-    selectedShons,
-    loading: lineLoading,
-    error: lineError,
-    fetchLines,
-    startDrawingLine,
-    addInflectionPoint,
-    saveLine,
-    cancelDrawing,
-    toggleShonSelection,
-    deleteLine,
-    clearError: clearLineError
-  } = useLineDrawing();
-
   useEffect(() => {
     if (isOpen && sambar) {
       fetchShons();
-      fetchLines(sambar.name);
       setCurrentShon(null);
       setActiveShon(null);
       setIsAddingNew(false);
       setError('');
-      clearLineError();
     }
-  }, [isOpen, sambar, fetchLines, clearLineError]);
+  }, [isOpen, sambar]);
 
   const fetchShons = async () => {
     if (!sambar) return;
@@ -63,7 +41,12 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
           coordinates: shon.location ? {
             lat: shon.location.lat,
             lng: shon.location.lng
-          } : (shon.coordinates || { lat: 0, lng: 0 })
+          } : (shon.coordinates || { lat: 0, lng: 0 }),
+          // Ensure color and shape have default values if not present
+          color: shon.color || 'green',
+          shape: shon.shape || 'one-line',
+          // Ensure name is available
+          name: shon.code || shon.name || 'Unnamed Shon'
         }));
         setShons(transformedShons);
         setError('');
@@ -126,7 +109,9 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         location: { 
           lat: Number(shon.coordinates.lat),
           lng: Number(shon.coordinates.lng)
-        }
+        },
+        color: shon.color || 'green',
+        shape: shon.shape || 'one-line'
       };
       
       console.log("Sending shon data to backend:", requestData);
@@ -147,7 +132,12 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
           coordinates: {
             lat: data.data.location?.lat || 0,
             lng: data.data.location?.lng || 0
-          }
+          },
+          // Ensure color and shape are preserved
+          color: data.data.color || 'green',
+          shape: data.data.shape || 'one-line',
+          // Also ensure name is available for display
+          name: data.data.code || data.data.name
         };
         setShons([...shons, newShonData]);
         setError('');
@@ -175,6 +165,8 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         lat: parseFloat(shonCoordinates.lat),
         lng: parseFloat(shonCoordinates.lng)
       },
+      color: shon.color || 'green',
+      shape: shon.shape || 'one-line',
       khorooInfo: shon.khorooInfo ? { ...shon.khorooInfo } : {
         district: sambar.khorooInfo.district,
         khoroo: sambar.khorooInfo.khoroo,
@@ -188,6 +180,8 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         lat: parseFloat(shonCoordinates.lat),
         lng: parseFloat(shonCoordinates.lng)
       },
+      color: shon.color || 'green',
+      shape: shon.shape || 'one-line',
       khorooInfo: shon.khorooInfo ? { ...shon.khorooInfo } : {
         district: sambar.khorooInfo.district,
         khoroo: sambar.khorooInfo.khoroo,
@@ -199,12 +193,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
   };
   const handleLocationChange = (newLocation) => {
     console.log("Location changed:", newLocation);
-    
-    // If we're drawing a line, add the point to the line
-    if (isDrawingLine) {
-      handleLineClick(newLocation);
-      return;
-    }
     
     if (activeShon) {
       const updatedCoordinates = {
@@ -245,6 +233,8 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
           lat: parseFloat(newLocation.lat),
           lng: parseFloat(newLocation.lng)
         },
+        color: 'green', // Default color
+        shape: 'one-line', // Default shape
         khorooInfo: {
           district: sambar.khorooInfo.district,
           khoroo: sambar.khorooInfo.khoroo,
@@ -306,7 +296,9 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         location: { 
           lat: Number(activeShon.coordinates.lat),
           lng: Number(activeShon.coordinates.lng)
-        }
+        },
+        color: activeShon.color || 'green',
+        shape: activeShon.shape || 'one-line'
       };
       
       console.log("Updating shon with data:", updateData);
@@ -400,50 +392,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
     }
   };
 
-  // Line drawing handlers using the hook
-  const handleStartDrawingLine = () => {
-    const success = startDrawingLine(shons, sambar);
-    if (!success && lineError) {
-      setError(lineError);
-    }
-  };
-
-  const handleLineClick = (coordinates) => {
-    addInflectionPoint(coordinates);
-  };
-
-  const handleSaveLine = async () => {
-    const success = await saveLine(shons);
-    if (success) {
-      alert('Line saved successfully!');
-    } else if (lineError) {
-      setError(lineError);
-    }
-  };
-
-  const handleCancelDrawing = () => {
-    cancelDrawing();
-  };
-
-  const handleShonSelect = (shonId) => {
-    toggleShonSelection(shonId);
-  };
-
-  const handleDeleteLine = async (lineId) => {
-    const success = await deleteLine(lineId);
-    if (success) {
-      alert('Line deleted successfully!');
-    } else if (lineError) {
-      setError(lineError);
-    }
-  };
-
-  // Clear errors from both sources
-  const clearAllErrors = () => {
-    setError('');
-    clearLineError();
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -464,41 +412,14 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
         <div className="map-modal-body" style={{ display: 'flex', flexDirection: 'row' }}>
           {/* Left Panel - Shon List and Form */}
           <div className="shon-list-panel" style={{ flex: '1', marginRight: '15px', overflowY: 'auto', maxHeight: '70vh' }}>
-            <div className="add-new-shon-form">
-              <div className="form-group">
-                <label htmlFor="new-shon-name">Add New Shon:</label>
-                <div className="search-input-group">
-                  <input
-                    id="new-shon-name"
-                    type="text"
-                    className="input-field"
-                    value={newShonName}
-                    onChange={(e) => setNewShonName(e.target.value)}
-                    placeholder="Enter new shon name..."
-                  />
-                  <button 
-                    type="button" 
-                    className="add-button"
-                    onClick={handleCreateNewShon}
-                    disabled={loading || lineLoading || !newShonName.trim()}
-                    style={{ 
-                      backgroundColor: '#32CD32',
-                      borderColor: '#28a745'
-                    }}
-                  >
-                    Add New Shon
-                  </button>
-                </div>
-              </div>
-            </div>
             
-            {(error || lineError) && (
-              <p className="error-message">{error || lineError}</p>
+            {error && (
+              <p className="error-message">{error}</p>
             )}
             
-            {(loading || lineLoading) && (
+            {loading && (
               <p className="loading-message">
-                {loading ? 'Loading shons...' : 'Processing lines...'}
+                {loading ? 'Loading shons...' : 'Loading...'}
               </p>
             )}
             
@@ -542,21 +463,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                 </table>
               </div>
             )}
-            
-            {/* Line Management Section */}
-            <LineManagementPanel
-              shons={shons}
-              lines={lines}
-              selectedShons={selectedShons}
-              isDrawingLine={isDrawingLine}
-              currentLine={currentLine}
-              lineLoading={lineLoading}
-              onShonSelect={handleShonSelect}
-              onStartDrawingLine={handleStartDrawingLine}
-              onSaveLine={handleSaveLine}
-              onCancelDrawing={handleCancelDrawing}
-              onDeleteLine={handleDeleteLine}
-            />
 
             <div className="map-modal-actions">
               <button 
@@ -570,7 +476,7 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
             {/* Right Panel - Map */}
           <div className="shon-map-panel" style={{ flex: '1.5', border: '1px solid #ddd', borderRadius: '4px' }}>
             <div style={{ height: '100%', minHeight: '60vh', position: 'relative' }}>              <MapEdit
-                key={`map-${shons.length}-${activeShon ? activeShon._id : 'none'}-${lines.length}`}
+                key={`map-${shons.length}-${activeShon ? activeShon._id : 'none'}`}
                 initialLocation={
                   activeShon ? activeShon.coordinates : 
                   currentShon ? currentShon.coordinates : 
@@ -586,12 +492,6 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                 locationType="shon"
                 allShons={shons}
                 activeShonId={activeShon ? activeShon._id : null}
-                onLineClick={isDrawingLine ? handleLineClick : null}
-                lines={lines}
-                currentLine={currentLine}
-                isDrawingLine={isDrawingLine}
-                selectedShons={selectedShons}
-                onShonSelect={handleShonSelect}
               />
               
               {/* Show save button when adding new shon by clicking map */}
@@ -629,6 +529,101 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                     <p style={{ fontSize: '10px', color: '#666', margin: '0 0 10px 0' }}>
                       Coordinates: {currentShon.coordinates?.lat?.toFixed(6)}, {currentShon.coordinates?.lng?.toFixed(6)}
                     </p>
+                    
+                    {/* Color Selection */}
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+                      Color:
+                    </label>
+                    <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, color: 'green' }))}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: '#32CD32',
+                          border: currentShon.color === 'green' ? '2px solid #000' : '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Green"
+                      />
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, color: 'red' }))}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: '#FF0000',
+                          border: currentShon.color === 'red' ? '2px solid #000' : '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Red"
+                      />
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, color: 'yellow' }))}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: '#FFD700',
+                          border: currentShon.color === 'yellow' ? '2px solid #000' : '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Yellow"
+                      />
+                    </div>
+                    
+                    {/* Shape Selection */}
+                    <label style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+                      Shape:
+                    </label>
+                    <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, shape: 'one-line' }))}
+                        style={{
+                          padding: '5px 8px',
+                          fontSize: '10px',
+                          backgroundColor: currentShon.shape === 'one-line' ? '#007bff' : '#f8f9fa',
+                          color: currentShon.shape === 'one-line' ? 'white' : '#333',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Circle with 1 vertical line"
+                      >
+                        1 Line
+                      </button>
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, shape: 'two-lines' }))}
+                        style={{
+                          padding: '5px 8px',
+                          fontSize: '10px',
+                          backgroundColor: currentShon.shape === 'two-lines' ? '#007bff' : '#f8f9fa',
+                          color: currentShon.shape === 'two-lines' ? 'white' : '#333',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Circle with 2 vertical lines"
+                      >
+                        2 Lines
+                      </button>
+                      <button
+                        onClick={() => setCurrentShon(prev => ({ ...prev, shape: 'three-lines' }))}
+                        style={{
+                          padding: '5px 8px',
+                          fontSize: '10px',
+                          backgroundColor: currentShon.shape === 'three-lines' ? '#007bff' : '#f8f9fa',
+                          color: currentShon.shape === 'three-lines' ? 'white' : '#333',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          cursor: 'pointer'
+                        }}
+                        title="Circle with 3 vertical lines"
+                      >
+                        3 Lines
+                      </button>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                     <button 
@@ -644,7 +639,7 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                     <button 
                       className="add-button"
                       onClick={() => handleSaveNewShon(currentShon)}
-                      disabled={loading || lineLoading || !currentShon.name?.trim()}
+                      disabled={loading || !currentShon.name?.trim()}
                       style={{ 
                         backgroundColor: '#32CD32',
                         borderColor: '#28a745',
@@ -652,7 +647,7 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                         padding: '5px 10px'
                       }}
                     >
-                      {(loading || lineLoading) ? 'Saving...' : 'Save Shon'}
+                      {loading ? 'Saving...' : 'Save Shon'}
                     </button>
                   </div>
                 </div>
@@ -708,7 +703,7 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                     <button 
                       className="update-button"
                       onClick={handleUpdateShon}
-                      disabled={loading || lineLoading || !activeShon.name.trim()}
+                      disabled={loading || !activeShon.name.trim()}
                       style={{ 
                         backgroundColor: '#32CD32',
                         borderColor: '#28a745',
@@ -716,57 +711,15 @@ const ShonModal = ({ isOpen, onClose, sambar }) => {
                         padding: '5px 10px'
                       }}
                     >
-                      {(loading || lineLoading) ? 'Updating...' : 'Update Shon'}
+                      {loading ? 'Updating...' : 'Update Shon'}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Line Drawing Controls */}
-              {isDrawingLine && currentLine && (
-                <div className="line-drawing-controls" style={{ 
-                  padding: '10px', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  position: 'absolute',
-                  bottom: '10px',
-                  left: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                  borderRadius: '4px',
-                  border: '1px solid #ddd',
-                  minWidth: '200px'
-                }}>
-                  <p style={{ fontSize: '12px', marginBottom: '10px' }}>
-                    Drawing line between selected shons. Click on the map to add points.
-                  </p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <button 
-                      className="cancel-button"
-                      onClick={handleCancelDrawing}
-                      style={{ 
-                        fontSize: '12px', 
-                        padding: '5px 10px',
-                        marginRight: '10px'
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button 
-                      className="save-button"
-                      onClick={handleSaveLine}
-                      disabled={loading || lineLoading}
-                      style={{ 
-                        backgroundColor: '#32CD32',
-                        borderColor: '#28a745',
-                        fontSize: '12px',
-                        padding: '5px 10px'
-                      }}
-                    >
-                      {(loading || lineLoading) ? 'Saving...' : 'Save Line'}
-                    </button>
-                  </div>
-                </div>
-              )}
+
+
+
             </div>
           </div>
         </div>

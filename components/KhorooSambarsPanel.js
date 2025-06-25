@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import LocationEditModal from './LocationEditModal';
 import ShonModal from './ShonModal';
+import LineModal from './LineModal';
 
 
 const KhorooSambarsPanel = () => {
@@ -16,6 +17,7 @@ const KhorooSambarsPanel = () => {
   const [error, setError] = useState('');
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
   const [isShonModalOpen, setIsShonModalOpen] = useState(false);
+  const [isLineModalOpen, setIsLineModalOpen] = useState(false);
   const [currentSambar, setCurrentSambar] = useState(null);
   const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [sambarToDelete, setSambarToDelete] = useState(null);
@@ -213,14 +215,23 @@ const KhorooSambarsPanel = () => {
     setIsMapModalOpen(false);
     setCurrentSambar(null);
   };
-  
-  const handleManageShons = (sambar) => {
+    const handleManageShons = (sambar) => {
     setCurrentSambar(sambar);
     setIsShonModalOpen(true);
   };
-  
+
   const closeShonModal = () => {
     setIsShonModalOpen(false);
+    setCurrentSambar(null);
+  };
+
+  const handleManageLines = (sambar) => {
+    setCurrentSambar(sambar);
+    setIsLineModalOpen(true);
+  };
+
+  const closeLineModal = () => {
+    setIsLineModalOpen(false);
     setCurrentSambar(null);
   };
   const handleLocationChange = (newLocation) => {
@@ -499,6 +510,17 @@ const KhorooSambarsPanel = () => {
                     >
                       Shon
                     </button>
+                    <button 
+                      className="line-button"
+                      onClick={() => handleManageLines(sambar)}
+                      style={{ 
+                        backgroundColor: '#4169E1',
+                        borderColor: '#0056b3',
+                        marginLeft: '5px'
+                      }}
+                    >
+                      Line
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -532,6 +554,14 @@ const KhorooSambarsPanel = () => {
           isOpen={isShonModalOpen}
           sambar={currentSambar}
           onClose={closeShonModal}
+        />
+      )}
+      
+      {isLineModalOpen && (
+        <LineModal
+          isOpen={isLineModalOpen}
+          sambar={currentSambar}
+          onClose={closeLineModal}
         />
       )}
     </div>

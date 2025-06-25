@@ -34,7 +34,7 @@ const getAllShonsController = async (req, res) => {
 const createShonController = async (req, res) => {
     try {
         console.log("Creating shon with data:", req.body);
-        const { sambarCode, code, location } = req.body;
+        const { sambarCode, code, location, color, shape } = req.body;
         
         if (!sambarCode || !code || !location || !location.lat || !location.lng) {
             console.log("Missing required fields:", { sambarCode, code, location });
@@ -51,7 +51,9 @@ const createShonController = async (req, res) => {
             location: {
                 lat: Number(location.lat),
                 lng: Number(location.lng)
-            }
+            },
+            color: color || 'green',
+            shape: shape || 'one-line'
         });
         
         console.log("Saving shon to database");
@@ -89,7 +91,7 @@ const getShonByIdController = async (req, res) => {
 
 const updateShonController = async (req, res) => {
     const { id } = req.params;
-    const { sambarCode, code, location } = req.body;
+    const { sambarCode, code, location, color, shape } = req.body;
     
     const shon = await Shon.findById(id);
     
@@ -107,6 +109,8 @@ const updateShonController = async (req, res) => {
         if (location.lat !== undefined) shon.location.lat = Number(location.lat);
         if (location.lng !== undefined) shon.location.lng = Number(location.lng);
     }
+    if (color) shon.color = color;
+    if (shape) shon.shape = shape;
     
     await shon.save();
     

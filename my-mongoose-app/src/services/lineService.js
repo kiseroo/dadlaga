@@ -1,15 +1,9 @@
 const Line = require('../models/Line');
 const Shon = require('../models/Shon');
 
-/**
- * Service layer for line operations
- * Contains business logic separated from controllers
- */
+
 class LineService {
   
-  /**
-   * Validate line data before creation/update
-   */
   static validateLineData(data) {
     const { sambarCode, startShonId, endShonId, coordinates } = data;
     const errors = [];
@@ -21,7 +15,6 @@ class LineService {
       errors.push('coordinates must be a non-empty array');
     }
 
-    // Validate coordinate structure
     if (coordinates && Array.isArray(coordinates)) {
       coordinates.forEach((coord, index) => {
         if (!coord.lat || !coord.lng || typeof coord.lat !== 'number' || typeof coord.lng !== 'number') {
@@ -36,9 +29,6 @@ class LineService {
     };
   }
 
-  /**
-   * Validate that shons exist before creating a line
-   */
   static async validateShonsExist(startShonId, endShonId) {
     const [startShon, endShon] = await Promise.all([
       Shon.findById(startShonId),
@@ -53,11 +43,8 @@ class LineService {
     };
   }
 
-  /**
-   * Create a new line with validation
-   */
+  
   static async createLine(lineData) {
-    // Validate input data
     const validation = this.validateLineData(lineData);
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
@@ -65,13 +52,11 @@ class LineService {
 
     const { sambarCode, startShonId, endShonId, coordinates } = lineData;
 
-    // Validate shons exist
     const shonValidation = await this.validateShonsExist(startShonId, endShonId);
     if (!shonValidation.startShonExists || !shonValidation.endShonExists) {
       throw new Error('One or both shons do not exist');
     }
 
-    // Check for duplicate lines
     const existingLine = await Line.findOne({
       sambarCode,
       $or: [
@@ -84,7 +69,6 @@ class LineService {
       throw new Error('A line already exists between these shons');
     }
 
-    // Create and save the line
     const line = new Line({
       sambarCode,
       startShonId,
@@ -95,9 +79,7 @@ class LineService {
     return await line.save();
   }
 
-  /**
-   * Get lines with optional filtering
-   */
+  
   static async getLines(filters = {}) {
     const { sambarCode, startShonId, endShonId } = filters;
     
@@ -112,9 +94,7 @@ class LineService {
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Get a specific line by ID
-   */
+ 
   static async getLineById(lineId) {
     const line = await Line.findById(lineId)
       .populate('startShonId', 'code name location coordinates')
@@ -127,11 +107,7 @@ class LineService {
     return line;
   }
 
-  /**
-   * Update line coordinates
-   */
   static async updateLineCoordinates(lineId, coordinates) {
-    // Validate coordinates
     if (!coordinates || !Array.isArray(coordinates) || coordinates.length === 0) {
       throw new Error('Valid coordinates array is required');
     }
@@ -155,9 +131,6 @@ class LineService {
     return line;
   }
 
-  /**
-   * Delete a line
-   */
   static async deleteLine(lineId) {
     const line = await Line.findByIdAndDelete(lineId);
     
@@ -183,9 +156,7 @@ class LineService {
     .sort({ createdAt: -1 });
   }
 
-  /**
-   * Calculate line statistics
-   */
+  
   static calculateLineStats(coordinates) {
     if (!coordinates || coordinates.length < 2) {
       return {
@@ -195,15 +166,13 @@ class LineService {
       };
     }
 
-    const inflectionPoints = coordinates.length - 2; // Exclude start and end points
+    const inflectionPoints = coordinates.length - 2; 
     
-    // Simple distance calculation (Haversine formula would be more accurate)
     let totalDistance = 0;
     for (let i = 0; i < coordinates.length - 1; i++) {
       const point1 = coordinates[i];
       const point2 = coordinates[i + 1];
       
-      // Simple Euclidean distance (for approximation)
       const distance = Math.sqrt(
         Math.pow(point2.lat - point1.lat, 2) + 
         Math.pow(point2.lng - point1.lng, 2)

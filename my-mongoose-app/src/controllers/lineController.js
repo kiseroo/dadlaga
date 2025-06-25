@@ -1,12 +1,10 @@
 const LineService = require('../services/lineService');
 const MapDrawingUtils = require('../utils/mapDrawingUtils');
 
-// Create a new line
 const createLine = async (req, res) => {
   try {
     const lineData = req.body;
 
-    // Validate coordinates format
     const coordinateValidation = MapDrawingUtils.validateCoordinatesArray(lineData.coordinates);
     if (!coordinateValidation.isValid) {
       return res.status(400).json({
@@ -15,10 +13,8 @@ const createLine = async (req, res) => {
       });
     }
 
-    // Create line using service
     const savedLine = await LineService.createLine(lineData);
 
-    // Calculate line statistics
     const stats = LineService.calculateLineStats(savedLine.coordinates);
 
     res.status(201).json({
@@ -32,7 +28,6 @@ const createLine = async (req, res) => {
   } catch (error) {
     console.error('Error creating line:', error);
     
-    // Handle validation errors
     if (error.message.includes('Validation failed') || error.message.includes('already exists')) {
       return res.status(400).json({
         success: false,
@@ -48,7 +43,6 @@ const createLine = async (req, res) => {
   }
 };
 
-// Get all lines or lines for a specific sambar
 const getLines = async (req, res) => {
   try {
     const { sambarCode, startShonId, endShonId } = req.query;
@@ -60,7 +54,6 @@ const getLines = async (req, res) => {
 
     const lines = await LineService.getLines(filters);
 
-    // Add statistics to each line
     const linesWithStats = lines.map(line => {
       const stats = LineService.calculateLineStats(line.coordinates);
       const distance = MapDrawingUtils.calculatePolylineDistance(line.coordinates);
@@ -89,14 +82,12 @@ const getLines = async (req, res) => {
   }
 };
 
-// Get a specific line by ID
 const getLineById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const line = await LineService.getLineById(id);
     
-    // Add statistics and additional info
     const stats = LineService.calculateLineStats(line.coordinates);
     const distance = MapDrawingUtils.calculatePolylineDistance(line.coordinates);
     const boundingBox = MapDrawingUtils.getBoundingBox(line.coordinates);
@@ -130,13 +121,11 @@ const getLineById = async (req, res) => {
   }
 };
 
-// Update a line
 const updateLine = async (req, res) => {
   try {
     const { id } = req.params;
     const { coordinates } = req.body;
 
-    // Validate coordinates format
     const coordinateValidation = MapDrawingUtils.validateCoordinatesArray(coordinates);
     if (!coordinateValidation.isValid) {
       return res.status(400).json({
@@ -147,7 +136,6 @@ const updateLine = async (req, res) => {
 
     const line = await LineService.updateLineCoordinates(id, coordinates);
     
-    // Add statistics
     const stats = LineService.calculateLineStats(line.coordinates);
     const distance = MapDrawingUtils.calculatePolylineDistance(line.coordinates);
 
@@ -187,7 +175,6 @@ const updateLine = async (req, res) => {
   }
 };
 
-// Delete a line
 const deleteLine = async (req, res) => {
   try {
     const { id } = req.params;
@@ -216,14 +203,12 @@ const deleteLine = async (req, res) => {
   }
 };
 
-// Get lines for a specific shon
 const getLinesForShon = async (req, res) => {
   try {
     const { shonId } = req.params;
 
     const lines = await LineService.getLinesForShon(shonId);
 
-    // Add statistics to each line
     const linesWithStats = lines.map(line => {
       const stats = LineService.calculateLineStats(line.coordinates);
       const distance = MapDrawingUtils.calculatePolylineDistance(line.coordinates);
@@ -252,18 +237,16 @@ const getLinesForShon = async (req, res) => {
   }
 };
 
-// Simplify line coordinates (remove redundant points)
 const simplifyLine = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tolerance = 10 } = req.body; // tolerance in meters
+    const { tolerance = 10 } = req.body; 
 
     const line = await LineService.getLineById(id);
     const simplifiedCoordinates = MapDrawingUtils.simplifyPolyline(line.coordinates, tolerance);
     
     const updatedLine = await LineService.updateLineCoordinates(id, simplifiedCoordinates);
     
-    // Add statistics
     const stats = LineService.calculateLineStats(updatedLine.coordinates);
     const distance = MapDrawingUtils.calculatePolylineDistance(updatedLine.coordinates);
 

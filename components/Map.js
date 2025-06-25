@@ -15,6 +15,47 @@ const center = {
   lng: 106.9177
 };
 
+// Helper function to generate shon marker SVG based on color and shape
+const generateShonMarkerSVG = (name, color = 'green', shape = 'one-line') => {
+  const colorMap = {
+    'green': '#32CD32',
+    'red': '#FF0000',
+    'yellow': '#FFD700'
+  };
+  
+  const pinColor = colorMap[color] || '#32CD32';
+  
+  // Generate lines based on shape - made shorter and use pin color
+  let lines = '';
+  if (shape === 'one-line') {
+    lines = `<line x1="20" y1="22" x2="20" y2="30" stroke="${pinColor}" stroke-width="2"/>`;
+  } else if (shape === 'two-lines') {
+    lines = `
+      <line x1="17" y1="22" x2="17" y2="30" stroke="${pinColor}" stroke-width="2"/>
+      <line x1="23" y1="22" x2="23" y2="30" stroke="${pinColor}" stroke-width="2"/>
+    `;
+  } else if (shape === 'three-lines') {
+    lines = `
+      <line x1="17" y1="22" x2="17" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+      <line x1="20" y1="22" x2="20" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+      <line x1="23" y1="22" x2="23" y2="30" stroke="${pinColor}" stroke-width="1.5"/>
+    `;
+  }
+  
+  return `
+    <svg width="40" height="42" viewBox="0 0 40 42" xmlns="http://www.w3.org/2000/svg">
+      <!-- White label background -->
+      <rect x="1" y="1" width="38" height="16" fill="white" stroke="#ddd" stroke-width="1"/>
+      <!-- Shon name text -->
+      <text x="20" y="11" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="bold" fill="#333">${(name || 'Shon').substring(0, 10)}</text>
+      <!-- Pin shape -->
+      <path d="M20 18C15.582 18 12 21.582 12 26c0 5.25 8 16 8 16s8-10.75 8-16c0-4.418-3.582-8-8-8z" fill="${pinColor}"/>
+      <circle cx="20" cy="26" r="6" fill="white"/>
+      ${lines}
+    </svg>
+  `;
+};
+
 function Map() {
   const [locationName, setLocationName] = useState('');
   const [saveStatus, setSaveStatus] = useState({ message: '', isError: false });
@@ -78,7 +119,10 @@ function Map() {
               lng: shon.location.lng
             } : (shon.coordinates || { lat: 0, lng: 0 }),
             // Also ensure name field exists (shons use 'code' field)
-            name: shon.code || shon.name || 'Unnamed Shon'
+            name: shon.code || shon.name || 'Unnamed Shon',
+            // Ensure color and shape have default values
+            color: shon.color || 'green',
+            shape: shon.shape || 'one-line'
           }));
           setShonLocations(transformedShons);
         }
@@ -198,7 +242,13 @@ function Map() {
           lat: location.coordinates.lat,
           lng: location.coordinates.lng
         },
-        icon: createMarkerIcon(location.name || 'Unnamed', 40, 'shon'),
+        icon: {
+          url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+            generateShonMarkerSVG(location.name, location.color, location.shape)
+          ),
+          scaledSize: new google.maps.Size(40, 42),
+          anchor: new google.maps.Point(20, 42)
+        },
         title: location.name,
         map: null
       });
