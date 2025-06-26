@@ -24,10 +24,37 @@ const getAllShonsController = async (req, res) => {
     
     const shons = await Shon.find(filter).sort({ createdAt: -1 });
     
+    // Get sambar info to include district and khoroo data
+    const Sambar = require('../models/Sambar');
+    
+    // Add khoroo info from the related sambars
+    const enhancedShons = await Promise.all(shons.map(async shon => {
+        const shonObj = shon.toObject();
+        
+        // Find the associated sambar to get khoroo info
+        if (shon.sambarCode) {
+            try {
+                const sambar = await Sambar.findOne({ name: shon.sambarCode });
+                if (sambar && sambar.khorooInfo) {
+                    // Add khoroo info from sambar
+                    shonObj.khorooInfo = {
+                        district: sambar.khorooInfo.district,
+                        khoroo: sambar.khorooInfo.khoroo,
+                        name: sambar.khorooInfo.name
+                    };
+                }
+            } catch (err) {
+                console.error(`Error finding sambar for shon ${shon.code}:`, err);
+            }
+        }
+        
+        return shonObj;
+    }));
+    
     res.json({
         success: true,
-        count: shons.length,
-        data: shons
+        count: enhancedShons.length,
+        data: enhancedShons
     });
 };
 
@@ -83,9 +110,29 @@ const getShonByIdController = async (req, res) => {
         });
     }
     
+    // Get the associated sambar to add khoroo info
+    const shonObj = shon.toObject();
+    
+    if (shon.sambarCode) {
+        const Sambar = require('../models/Sambar');
+        try {
+            const sambar = await Sambar.findOne({ name: shon.sambarCode });
+            if (sambar && sambar.khorooInfo) {
+                // Add khoroo info from sambar
+                shonObj.khorooInfo = {
+                    district: sambar.khorooInfo.district,
+                    khoroo: sambar.khorooInfo.khoroo,
+                    name: sambar.khorooInfo.name
+                };
+            }
+        } catch (err) {
+            console.error(`Error finding sambar for shon ${shon.code}:`, err);
+        }
+    }
+    
     res.json({
         success: true,
-        data: shon
+        data: shonObj
     });
 };
 
