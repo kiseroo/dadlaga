@@ -72,7 +72,9 @@ const MapEdit = ({
   isDrawingLine = false,
   selectedShons = [],
   onShonSelect = null,
-  onLineClick = null
+  onLineClick = null,
+  onSambarSelect = null, // New prop for sambar selection during line drawing
+  selectedSambarId = null // New prop for tracking selected sambar
 }) => {
   const [initialCenter] = useState(() => {
     if (initialLocation) {
@@ -251,6 +253,17 @@ const MapEdit = ({
     return <div style={{ padding: '20px', textAlign: 'center' }}>Loading Maps...</div>;
   }
   
+  // Helper to determine if we should render the current sambar or not
+  const shouldShowCurrentSambar = () => {
+    // Always show current sambar when:
+    // 1. Not in drawing mode, or
+    // 2. In drawing mode (always show sambars during line drawing)
+    return sambar && (
+      !isDrawingLine || 
+      isDrawingLine
+    );
+  };
+  
   return (
     <div className="map-edit-container" style={{ position: 'relative', width: '100%', marginBottom: '20px' }}>
       
@@ -269,19 +282,31 @@ const MapEdit = ({
           disableDefaultUI: false,
           clickableIcons: false // Prevent interference from map icons
         }}
-      >        {/* Custom Styled Marker for selected location - only show if not in shon mode or if editing a specific shon, and NOT drawing a line */}
-        {selectedLocation && locationType !== 'shon' && !isDrawingLine && (
+      >
+        {/* Always show current sambar marker in line drawing mode to allow connecting to it */}
+        {shouldShowCurrentSambar() && (
           <Marker
-            key={`marker-${selectedLocation.lat}-${selectedLocation.lng}`}
+            key={`sambar-${sambar._id || 'current'}`}
             position={{
-              lat: parseFloat(selectedLocation.lat),
-              lng: parseFloat(selectedLocation.lng)
+              lat: parseFloat(sambar.coordinates?.lat || initialLocation?.lat),
+              lng: parseFloat(sambar.coordinates?.lng || initialLocation?.lng)
             }}            
-            title={sambar?.name || "Selected Location"}
-            onLoad={(marker) => {
-              markerRef.current = marker;
+            title={sambar?.name || "Sambar"}
+            icon={createMarkerIcon(sambar?.name || "Sambar", 50, 'sambar', selectedSambarId === sambar._id)} 
+            zIndex={1000}
+            onClick={() => {
+              if (isDrawingLine && onSambarSelect && typeof onSambarSelect === 'function') {
+                console.log("Sambar marker clicked for line selection:", sambar);
+                onSambarSelect(sambar._id);
+              } else if (onLocationChange && typeof onLocationChange === 'function') {
+                console.log("Sambar marker clicked:", sambar);
+                // Set location to sambar position when clicked (similar to shon click behavior)
+                onLocationChange({
+                  lat: parseFloat(sambar.coordinates?.lat || initialLocation?.lat),
+                  lng: parseFloat(sambar.coordinates?.lng || initialLocation?.lng)
+                });
+              }
             }}
-            icon={createMarkerIcon(sambar?.name || "Selected", 50, locationType)} 
           />
         )}
         
@@ -389,11 +414,21 @@ const MapEdit = ({
         {/* Show current line being drawn with preview to end point */}
         {isDrawingLine && currentLine && currentLine.coordinates && currentLine.coordinates.length > 0 && (
           (() => {
-            // Find the end shon to show complete line preview
-            const endShon = allShons.find(s => s._id === currentLine.endShonId);
-            if (!endShon) return null;
+            // Find the endpoint - could be either a shon or a sambar
+            let endCoords = null;
             
-            const endCoords = endShon.coordinates || endShon.location;
+            if (currentLine.endSambarId && sambar && sambar._id === currentLine.endSambarId) {
+              // End point is the current sambar (check for this first)
+              endCoords = sambar.coordinates || initialLocation;
+            } else if (currentLine.endShonId) {
+              // End point is a shon
+              const endShon = allShons.find(s => s._id === currentLine.endShonId);
+              if (!endShon) return null;
+              endCoords = endShon.coordinates || endShon.location;
+            }
+            
+            if (!endCoords) return null;
+            
             const completeLineCoords = [
               ...currentLine.coordinates,
               { lat: endCoords.lat, lng: endCoords.lng }
@@ -435,9 +470,27 @@ const MapEdit = ({
               }}
               onClick={() => {
                 // Show info about the line when clicked
+                let startInfo = "Unknown";
+                let endInfo = "Unknown";
+                
+                // Check for shon endpoints
                 const startShon = allShons.find(s => s._id === line.startShonId);
                 const endShon = allShons.find(s => s._id === line.endShonId);
-                alert(`Line: ${startShon?.code || startShon?.name || 'Unknown'} → ${endShon?.code || endShon?.name || 'Unknown'}\nPoints: ${line.coordinates.length}`);
+                
+                // Check for sambar endpoints
+                if (line.startSambarId && sambar && sambar._id === line.startSambarId) {
+                  startInfo = `Sambar: ${sambar.name || 'Current Sambar'}`;
+                } else if (startShon) {
+                  startInfo = `Shon: ${startShon.code || startShon.name || 'Unknown'}`;
+                }
+                
+                if (line.endSambarId && sambar && sambar._id === line.endSambarId) {
+                  endInfo = `Sambar: ${sambar.name || 'Current Sambar'}`;
+                } else if (endShon) {
+                  endInfo = `Shon: ${endShon.code || endShon.name || 'Unknown'}`;
+                }
+                
+                alert(`Line: ${startInfo} → ${endInfo}\nPoints: ${line.coordinates.length}`);
               }}
             />
           );
@@ -617,6 +670,25 @@ const MapEdit = ({
               <strong>Khoroo:</strong> {khorooInfo.khoroo || 'Not set'}
             </p>
           )}
+        </div>
+      )}
+      
+      {/* Line Drawing Mode Indicator */}
+      {isDrawingLine && (
+        <div style={{ 
+          marginTop: '10px',
+          padding: '10px',
+          backgroundColor: '#ffe6e6',
+          borderRadius: '4px',
+          border: '1px solid #ff9999'
+        }}>
+          <p style={{ margin: '0', fontWeight: 'bold' }}>
+            <i className="fa fa-pencil" style={{ marginRight: '5px' }}></i>
+            Line Drawing Mode
+          </p>
+          <p style={{ margin: '5px 0 0', fontSize: '12px' }}>
+            Click on the map to add points. Click on Shons or Sambars to connect to them.
+          </p>
         </div>
       )}
     </div>

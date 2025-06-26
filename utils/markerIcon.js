@@ -31,7 +31,7 @@ export const createMarkerIcon = (name = '', size = 40, type = 'sambar', isSelect
     <path transform="translate(0,120)" fill="${markerColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}" d="M256 0C150 0 64 86 64 192c0 125.6 163.6 307.2 175.4 320.3 9.6 10.2 25.6 10.2 35.2 0C284.4 499.2 448 317.6 448 192 448 86 362 0 256 0z"/>
     
     <!-- Building shape with type indicator -->
-    <rect transform="translate(0,120)" x="176" y="160" width="160" height="192" rx="16" fill="%23ffffff" stroke="%23000000" stroke-width="1"/>
+    <rect transform="translate(0,120)" x="176" y="160" width="160" height="140" rx="16" fill="%23ffffff" stroke="%23000000" stroke-width="1"/>
     
     <!-- Windows with type-based color -->
     <rect transform="translate(0,120)" x="192" y="176" width="32" height="32" rx="4" fill="${markerColor}"/>
@@ -41,9 +41,6 @@ export const createMarkerIcon = (name = '', size = 40, type = 'sambar', isSelect
     <rect transform="translate(0,120)" x="192" y="224" width="32" height="32" rx="4" fill="${markerColor}"/>
     <rect transform="translate(0,120)" x="240" y="224" width="32" height="32" rx="4" fill="${markerColor}"/>
     <rect transform="translate(0,120)" x="288" y="224" width="32" height="32" rx="4" fill="${markerColor}"/>
-    
-    <!-- Type icon in the center of the building -->
-    <text transform="translate(0,120)" x="256" y="280" font-family="Arial" font-size="80" font-weight="bold" fill="${markerColor}" text-anchor="middle">${type === 'sambar' ? 'S' : 'Ш'}</text>
   </svg>`;
   
   return {    

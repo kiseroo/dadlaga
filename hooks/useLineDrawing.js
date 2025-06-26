@@ -5,6 +5,7 @@ const useLineDrawing = () => {
   const [currentLine, setCurrentLine] = useState(null);
   const [isDrawingLine, setIsDrawingLine] = useState(false);
   const [selectedShons, setSelectedShons] = useState([]);
+  const [selectedSambarId, setSelectedSambarId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,33 +28,54 @@ const useLineDrawing = () => {
     }
   }, []);
 
-  // drawing a line between selected shons
+  // drawing a line between selected shons or between shon and sambar
   const startDrawingLine = useCallback((shons, sambar) => {
-    if (selectedShons.length < 2) {
-      setError('Please select at least 2 shons to connect with a line');
+    // Clear any existing sambar selection
+    setSelectedSambarId(null);
+    
+    if (selectedShons.length < 1) {
+      setError('Please select at least 1 shon to start drawing a line');
       return false;
     }
     
     const startShon = shons.find(s => s._id === selectedShons[0]);
-    const endShon = shons.find(s => s._id === selectedShons[1]);
     
-    if (!startShon || !endShon) {
-      setError('Selected shons not found');
+    if (!startShon) {
+      setError('Selected shon not found');
       return false;
     }
     
     const startCoords = startShon.coordinates || startShon.location;
     
     setIsDrawingLine(true);
-    setCurrentLine({
-      startShonId: selectedShons[0],
-      endShonId: selectedShons[1],
-      coordinates: [
-        { lat: startCoords.lat, lng: startCoords.lng }
-      ],
-      sambarCode: sambar.name
-    });
-    setError('Click on the map to add inflection points.');
+    
+    // If two shons are selected, set the second as endpoint
+    if (selectedShons.length === 2) {
+      const endShon = shons.find(s => s._id === selectedShons[1]);
+      
+      if (endShon) {
+        setCurrentLine({
+          startShonId: selectedShons[0],
+          endShonId: selectedShons[1],
+          coordinates: [
+            { lat: startCoords.lat, lng: startCoords.lng }
+          ],
+          sambarCode: sambar.name
+        });
+      }
+    } else {
+      // If only one shon is selected, leave endpoint open (can be set to another shon or sambar)
+      setCurrentLine({
+        startShonId: selectedShons[0],
+        // No endpoint set yet
+        coordinates: [
+          { lat: startCoords.lat, lng: startCoords.lng }
+        ],
+        sambarCode: sambar.name
+      });
+    }
+    
+    setError('Click on the map to add inflection points, or click on a shon or sambar to connect to it.');
     return true;
   }, [selectedShons]);
 
@@ -76,7 +98,27 @@ const useLineDrawing = () => {
     });
   }, [isDrawingLine, currentLine]);
 
-  const saveLine = useCallback(async (shons) => {
+  // Toggle selection of a sambar for line drawing
+  const toggleSambarSelection = useCallback((sambarId) => {
+    if (!isDrawingLine || !currentLine) {
+      console.log('Cannot select sambar - not in drawing mode');
+      return;
+    }
+    
+    console.log('Toggling sambar selection:', sambarId);
+    
+    // If we already have a shon as endpoint, replace it with the sambar
+    // But since the backend requires endShonId, we need to keep the startShonId as endShonId as well
+    setCurrentLine(prev => ({
+      ...prev,
+      endShonId: prev.startShonId, // Keep the startShonId as endShonId (backend requirement)
+      endSambarId: sambarId // Set sambar as endpoint
+    }));
+    
+    setSelectedSambarId(sambarId);
+  }, [isDrawingLine, currentLine]);
+
+  const saveLine = useCallback(async (shons, sambar) => {
     if (!currentLine) {
       setError('No line to save');
       return false;
@@ -85,23 +127,46 @@ const useLineDrawing = () => {
     try {
       setLoading(true);
       
-      const endShon = shons.find(s => s._id === currentLine.endShonId);
-      if (!endShon) {
-        setError('End shon not found');
+      // Determine the endpoint coordinates based on whether it's a shon or sambar
+      let endCoords;
+      
+      const isEndingSambar = currentLine.endSambarId && sambar && sambar._id === currentLine.endSambarId;
+      
+      if (isEndingSambar) {
+        // End point is a sambar
+        endCoords = sambar.coordinates;
+      } else if (currentLine.endShonId) {
+        // End point is a shon
+        const endShon = shons.find(s => s._id === currentLine.endShonId);
+        if (!endShon) {
+          setError('End shon not found');
+          return false;
+        }
+        endCoords = endShon.coordinates || endShon.location;
+      } else {
+        setError('No endpoint selected (shon or sambar)');
         return false;
       }
       
-      const endCoords = endShon.coordinates || endShon.location;
+      if (!endCoords || !endCoords.lat || !endCoords.lng) {
+        setError('Invalid endpoint coordinates');
+        return false;
+      }
       
       const completeCoordinates = [
         ...currentLine.coordinates,
         { lat: endCoords.lat, lng: endCoords.lng }
       ];
       
+      // Prepare the line data
+      // If the endpoint is a sambar, we use the startShonId as endShonId to satisfy the backend validation
+      // but we also include endSambarId to know it's actually a sambar endpoint
       const lineData = {
         sambarCode: currentLine.sambarCode,
         startShonId: currentLine.startShonId,
-        endShonId: currentLine.endShonId,
+        startSambarId: currentLine.startSambarId,
+        endShonId: currentLine.endShonId, // This will be the same as startShonId if endpoint is a sambar
+        endSambarId: isEndingSambar ? currentLine.endSambarId : undefined,
         coordinates: completeCoordinates
       };
 
@@ -120,6 +185,7 @@ const useLineDrawing = () => {
         setCurrentLine(null);
         setIsDrawingLine(false);
         setSelectedShons([]);
+        setSelectedSambarId(null);
         setError('');
         return true;
       } else {
@@ -139,12 +205,26 @@ const useLineDrawing = () => {
     setCurrentLine(null);
     setIsDrawingLine(false);
     setSelectedShons([]);
+    setSelectedSambarId(null);
     setError('');
   }, []);
 
   const toggleShonSelection = useCallback((shonId) => {
-    if (isDrawingLine) return;
+    if (isDrawingLine) {
+      // In drawing mode, clicking a shon sets it as the endpoint
+      setCurrentLine(prev => {
+        if (!prev) return null;
+        
+        return {
+          ...prev,
+          endSambarId: undefined, // Remove sambar endpoint if exists
+          endShonId: shonId // Set this shon as endpoint
+        };
+      });
+      return;
+    }
     
+    // Normal selection mode (before drawing)
     setSelectedShons(prev => {
       if (prev.includes(shonId)) {
         return prev.filter(id => id !== shonId);
@@ -154,7 +234,7 @@ const useLineDrawing = () => {
         return [prev[1], shonId];
       }
     });
-  }, [isDrawingLine]);
+  }, [isDrawingLine, currentLine]);
 
   // Delete a line
   const deleteLine = useCallback(async (lineId) => {
@@ -242,6 +322,7 @@ const useLineDrawing = () => {
     setCurrentLine(null);
     setIsDrawingLine(false);
     setSelectedShons([]);
+    setSelectedSambarId(null);
     setError('');
     setLoading(false);
   }, []);
@@ -251,6 +332,7 @@ const useLineDrawing = () => {
     currentLine,
     isDrawingLine,
     selectedShons,
+    selectedSambarId,
     loading,
     error,
     
@@ -260,6 +342,7 @@ const useLineDrawing = () => {
     saveLine,
     cancelDrawing,
     toggleShonSelection,
+    toggleSambarSelection,
     deleteLine,
     simplifyLine,
     getLinesForShon,

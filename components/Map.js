@@ -278,7 +278,7 @@ function Map() {
             // Find the sambar by ID and match with its name
             (sambarLocations.find(s => s._id === selectedSambarId)?.name === location.sambarCode)
           ))
-        ) //
+        )
       )
       .map((location) => {
       const marker = new google.maps.Marker({

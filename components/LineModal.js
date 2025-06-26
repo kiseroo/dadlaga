@@ -15,6 +15,7 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
     currentLine,
     isDrawingLine,
     selectedShons,
+    selectedSambarId,
     loading: lineLoading,
     error: lineError,
     fetchLines,
@@ -23,6 +24,7 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
     saveLine,
     cancelDrawing,
     toggleShonSelection,
+    toggleSambarSelection,
     deleteLine,
     clearError: clearLineError
   } = useLineDrawing();
@@ -78,7 +80,7 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
   };
 
   const handleSaveLine = () => {
-    saveLine(shons);
+    saveLine(shons, sambar);
   };
 
   if (!isOpen) return null;
@@ -105,11 +107,14 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
               <LineManagementPanel
                 lines={lines}
                 shons={shons}
+                sambar={sambar}
                 selectedShons={selectedShons}
+                selectedSambarId={selectedSambarId}
                 isDrawingLine={isDrawingLine}
                 currentLine={currentLine}
                 lineLoading={lineLoading}
                 onShonSelect={toggleShonSelection}
+                onSambarSelect={toggleSambarSelection}
                 onStartDrawingLine={handleStartDrawingLine}
                 onSaveLine={handleSaveLine}
                 onCancelDrawing={cancelDrawing}
@@ -128,7 +133,7 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
                   borderRadius: '4px',
                   border: '1px solid #ff9999'
                 }}>
-                  <strong>Click on the map to add inflection points.</strong>
+                  <strong>Click on the map to add inflection points, or click on Shons or Sambar to connect.</strong>
                   {currentLine && (
                     <div>Points added: {currentLine.coordinates?.length || 0}</div>
                   )}
@@ -147,8 +152,10 @@ const LineModal = ({ isOpen, onClose, sambar }) => {
                   currentLine={currentLine}
                   isDrawingLine={isDrawingLine}
                   selectedShons={selectedShons}
+                  selectedSambarId={selectedSambarId}
                   onLineClick={addInflectionPoint}
                   onShonSelect={toggleShonSelection}
+                  onSambarSelect={toggleSambarSelection}
                 />
               </div>
             </div>
